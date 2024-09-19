@@ -1,0 +1,20 @@
+{
+	"default_users": [
+		{
+			"email": "admin@example.com",
+			"username": "admin",
+			"role": "admin",
+			"active": true
+		},
+		{
+			"email": "employee1@example.com",
+			"username": "employee1",
+			"role": "employee"
+		},
+		{
+			"email": "client1@example.com",
+			"username": "client1",
+			"role": "client"
+		}
+	]
+}
