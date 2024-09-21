@@ -1,8 +1,11 @@
 package controller
 
 import (
+	crmErrors "crm-backend/app/errors"
 	"crm-backend/app/service"
 	"net/http"
+
+	"errors"
 
 	"github.com/gin-gonic/gin"
 )
@@ -39,7 +42,7 @@ func (ctrl *AuthController) Register(c *gin.Context) {
 // Login handles user login
 func (ctrl *AuthController) Login(c *gin.Context) {
 	var input struct {
-		Email    string `json:"email" binding:"required,email"`
+		Username string `json:"username" binding:"required"`
 		Password string `json:"password" binding:"required"`
 	}
 
@@ -48,16 +51,17 @@ func (ctrl *AuthController) Login(c *gin.Context) {
 		return
 	}
 
-	user, err := ctrl.authService.Login(input.Email, input.Password)
+	jwtToken, user, err := ctrl.authService.Login(input.Username, input.Password)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+		if errors.Is(err, crmErrors.ERR_INVALID_USER_OR_PASSWORD) {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+		} else if errors.Is(err, crmErrors.ERR_USER_INACTIVE) {
+			c.JSON(http.StatusForbidden, gin.H{"error": "User is inactive"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Something went wrong"})
+		}
 		return
 	}
 
-	if !user.Active {
-		c.JSON(http.StatusForbidden, gin.H{"error": "User is inactive"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "Login successful", "user": user})
+	c.JSON(http.StatusOK, gin.H{"message": "Login successful", "token": jwtToken, "user": user})
 }

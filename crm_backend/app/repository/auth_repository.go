@@ -7,7 +7,7 @@ import (
 )
 
 type AuthRepository interface {
-	FindByEmail(email string) (*model.User, error)
+	FindByEmailOrUsername(username string) (*model.User, error)
 	CreateUser(user *model.User) error
 }
 
@@ -19,9 +19,9 @@ func NewAuthRepository(db *gorm.DB) AuthRepository {
 	return &authRepository{db: db}
 }
 
-func (a *authRepository) FindByEmail(email string) (*model.User, error) {
+func (a *authRepository) FindByEmailOrUsername(username string) (*model.User, error) {
 	var user model.User
-	if err := a.db.Where("email = ?", email).First(&user).Error; err != nil {
+	if err := a.db.Where("email = ? OR username = ?", username, username).First(&user).Error; err != nil {
 		return nil, err
 	}
 	return &user, nil
