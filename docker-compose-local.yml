@@ -12,47 +12,32 @@ services:
     ports:
       - "3306:3306"
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # goapp:
-  #   image: golang:1.22
-  #   container_name: go_container
-  #   depends_on:
-  #     mysql:
-  #       condition: service_healthy
-  #   volumes:
-  #     - ./crm_backend:/app
-  #   working_dir: /app
-  #   command: go run main.go
-  #   environment:
-  #     DB_HOST: mysql
-  #     DB_PORT: 3306
-  #     DB_USER: user
-  #     DB_PASSWORD: password
-  #     DB_NAME: mydb
-  #   ports:
-  #     - "8080:8080"
-  #   healthcheck:
-  #     test: ["CMD", "curl", "-f", "http://localhost:8080/crm/v1/healthz"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 3
-  #     start_period: 30s
-
-  # ui:
-  #   image: ghcr.io/cirruslabs/flutter:3.22.1
-  #   container_name: flutter_web_container
-  #   depends_on:
-  #     goapp:
-  #       condition: service_healthy
-  #   working_dir: /app
-  #   volumes:
-  #     - ./crm_ui:/app                    
-  #     - /app/build  
-  #   ports:
-  #     - "3000:3000"
-  #   command: >
-  #     /bin/sh -c "flutter pub get && flutter run -d web-server --web-port 3000 --web-hostname 0.0.0.0"
+  goapp:
+    image: golang:1.22
+    container_name: go_container
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - ./crm_backend:/app
+    working_dir: /app
+    command: go run main.go
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: user
+      DB_PASSWORD: password
+      DB_NAME: mydb
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/crm/v1/healthz" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
