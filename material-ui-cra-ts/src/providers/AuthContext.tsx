@@ -1,5 +1,7 @@
-import React, { createContext, useState, useContext, ReactNode } from 'react';
+import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import User from '../model/user';
+import { isLoggedIn } from '../api/auth_service'; // Import the login function
+
 
 // Define your props explicitly
 interface AuthProviderProps {
@@ -25,7 +27,6 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [user, setUser] = useState<User | null>(null);
 
     const login = (token: string, user: User) => {
@@ -35,10 +36,23 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setUser(user);
     };
 
+    const checkAndUseExistingToken = async () => {
+        const isLogged = await isLoggedIn();
+        if (isLogged) {
+            const userJson = localStorage.getItem('authUser');
+            if (userJson == null) {
+                return false
+            }
+            setUser(JSON.parse(userJson))
+        }
+    }
+
     const logout = () => {
         localStorage.clear();
         setUser(null);
     };
+
+    useEffect(() => { checkAndUseExistingToken(); }, []);
 
     return (
         <AuthContext.Provider value={{ user, login, logout }}>

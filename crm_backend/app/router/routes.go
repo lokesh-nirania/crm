@@ -25,14 +25,17 @@ func InitializeRoutes(router *gin.Engine) {
 	// repo initialisation
 	authRepo := repository.NewAuthRepository(config.DB)
 	productRepo := repository.NewProductRepository(config.DB)
+	grnRepo := repository.NewGRNRepository(config.DB)
 
 	// service initialisation
 	authService := service.NewAuthService(authRepo, jwtSecret)
 	productService := service.NewProductService(productRepo)
+	grnService := service.NewGRNService(grnRepo)
 
 	// controller initialisation
 	authController := controller.NewAuthController(authService)
 	productController := controller.NewProductCtrl(productService)
+	grnController := controller.NewGRNCtrl(grnService)
 
 	// Auth routes
 	auth := router.Group("/api/crm/v1/auth")
@@ -64,13 +67,36 @@ func InitializeRoutes(router *gin.Engine) {
 	products := router.Group("/api/crm/v1/products")
 	products.Use(middleware.JWTAuthMiddleware(jwtSecret)) // Apply the JWT middleware
 	{
-		products.GET("", productController.GetAllProducts)
+		// products.GET("", productController.GetAllProducts)
 		products.GET("/v2", productController.GetAllProductsV2)
-		products.GET("/properties", productController.GetProductProperties)
+		products.GET("/attributes", productController.GetProductAttributes)
 		products.GET("/filters", productController.GetProductFilters)
+		products.GET("/size_variants/:variant", productController.GetProductSizeVariants)
 
 		products.POST("/add", productController.AddProduct)
 		products.POST("/add/:propertyName", productController.AddProductProperty)
-		// profile.PUT("/:email", controllers.UpdateProfile)
+	}
+
+	grn := router.Group("/api/crm/v1/grn")
+	grn.Use(middleware.JWTAuthMiddleware(jwtSecret)) // Apply the JWT middleware
+	{
+		grn.GET("", grnController.GetAllGRN)
+		grn.POST("/add", grnController.AddGRN)
+		grn.POST("/confirm", grnController.ConfirmGRN)
+
+		grnWarehouse := grn.Group("/warehouse")
+		{
+			grnWarehouse.GET("", grnController.GetGRNWarehouses)
+			grnWarehouse.POST("/add", grnController.AddWarehouse)
+		}
+
+		grnVendor := grn.Group("/vendor")
+		{
+			grnVendor.GET("", grnController.GetGRNVendors)
+			grnVendor.POST("/add", grnController.AddVendor)
+		}
+
+		grn.GET("/sources", grnController.GetGRNSources)
+
 	}
 }

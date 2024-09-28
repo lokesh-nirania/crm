@@ -4,6 +4,7 @@ export interface ProductFormDataRequest {
 	id: number;
 	sku: string;
 	name: string;
+	description: string;
 	status: boolean;
 	mrp: number;
 	cost_price: number;
@@ -15,9 +16,11 @@ export interface ProductFormDataRequest {
 	fabric_id: number;
 	sleeve_id: number;
 	gender_id: number;
-	size_variant_id: number;
 	source_id: number;
+	size_variant: string;
+	image_file_id: string;
 }
+
 
 export interface ProductFormDataResponse {
 	success: boolean;
@@ -27,7 +30,7 @@ export interface ProductFormDataResponse {
 export interface ProductPropertyAddResponse {
 	success: boolean;
 	property_name: string;
-	property: ProductProperty;
+	property: ProductAttributeProperty;
 }
 
 // api response
@@ -49,18 +52,25 @@ export interface FilterResponse {
 	metadata: any;
 }
 
-export interface ProductPropertiesResponse {
+export interface ProductAttributesResponse {
 	properties: {
-		categories: ProductProperty[];
-		colors: ProductProperty[];
-		fabrics: ProductProperty[];
-		fits: ProductProperty[];
-		genders: ProductProperty[];
-		size_variants: ProductProperty[];
-		sleeves: ProductProperty[];
-		sources: ProductProperty[];
-		variants: ProductProperty[];
+		categories: ProductAttributeProperty[];
+		colors: ProductAttributeProperty[];
+		fabrics: ProductAttributeProperty[];
+		fits: ProductAttributeProperty[];
+		genders: ProductAttributeProperty[];
+		sleeves: ProductAttributeProperty[];
+		sources: ProductAttributeProperty[];
+		variants: ProductAttributeProperty[];
+	},
+	lists: {
+		size_variants: string[];
 	}
+}
+
+export interface SizeVariantListResponse {
+	status: string;
+	size_variants: SizeVariant[]
 }
 
 
@@ -71,18 +81,20 @@ export default class Product {
 	sku: string;
 	name: string;
 	status: boolean;
+	description: string;
 	mrp: number;
 	cost_price: number;
 	sell_price: number;
-	category: ProductProperty;
-	fit: ProductProperty;
-	variant: ProductProperty;
-	color: ProductProperty;
-	fabric: ProductProperty;
-	sleeve: ProductProperty;
-	gender: ProductProperty;
-	size_variant: ProductProperty;
-	source: ProductProperty;
+	category: ProductAttributeProperty;
+	fit: ProductAttributeProperty;
+	variant: ProductAttributeProperty;
+	color: ProductAttributeProperty;
+	fabric: ProductAttributeProperty;
+	sleeve: ProductAttributeProperty;
+	gender: ProductAttributeProperty;
+	size_variant: string;
+	source: ProductAttributeProperty;
+	image_file_id: string;
 	createdBy: User;
 	lastModifiedBy: User;
 
@@ -91,18 +103,20 @@ export default class Product {
 		sku: string = "",
 		name: string = "",
 		status: boolean = false,
+		description: string,
 		mrp: number = 0,
 		cost_price: number = 0,
 		sell_price: number = 0,
-		category: ProductProperty,
-		fit: ProductProperty,
-		variant: ProductProperty,
-		color: ProductProperty,
-		fabric: ProductProperty,
-		sleeve: ProductProperty,
-		gender: ProductProperty,
-		size_variant: ProductProperty,
-		source: ProductProperty,
+		category: ProductAttributeProperty,
+		fit: ProductAttributeProperty,
+		variant: ProductAttributeProperty,
+		color: ProductAttributeProperty,
+		fabric: ProductAttributeProperty,
+		sleeve: ProductAttributeProperty,
+		gender: ProductAttributeProperty,
+		size_variant: string,
+		source: ProductAttributeProperty,
+		image_file_id: string,
 		createdBy: User,
 		lastModifiedBy: User
 	) {
@@ -110,6 +124,7 @@ export default class Product {
 		this.sku = sku;
 		this.name = name;
 		this.status = status;
+		this.description = description;
 		this.mrp = mrp;
 		this.cost_price = cost_price;
 		this.sell_price = sell_price;
@@ -122,19 +137,30 @@ export default class Product {
 		this.gender = gender;
 		this.size_variant = size_variant;
 		this.source = source;
+		this.image_file_id = image_file_id;
 		this.createdBy = createdBy;
 		this.lastModifiedBy = lastModifiedBy;
 	}
 }
 
-export class ProductProperty {
+export class ProductAttributeProperty {
 	ID: number;
 	name: string;
-	// createdBy: User;
 	isChecked: boolean;
 
 	constructor(id: number, name: string = "", isChecked: boolean = false) {
 		this.ID = id;
+		this.name = name;
+		// this.createdBy = createdBy;
+		this.isChecked = isChecked;
+	}
+}
+
+export class ProductAttributeList {
+	name: string;
+	isChecked: boolean;
+
+	constructor(name: string = "", isChecked: boolean = false) {
 		this.name = name;
 		// this.createdBy = createdBy;
 		this.isChecked = isChecked;
@@ -169,18 +195,52 @@ export class RangeFilter extends ProductFilter {
 export class LikeFilter extends ProductFilter {
 	content: string;
 
-	constructor(name: string, filterType = "range", isSelected = false, content: string) {
+	constructor(name: string, filterType = "like", isSelected = false, content = "") {
 		super(name, filterType, isSelected);
 		this.content = content;
 	}
 }
 
-export class ListFilter extends ProductFilter {
-	values: Array<ProductProperty>;
+export class PropertyFilter extends ProductFilter {
+	values: Array<ProductAttributeProperty>;
 
-	constructor(name: string, filterType = "range", isSelected = false, values: Array<ProductProperty>) {
+	constructor(name: string, filterType = "property", isSelected = false, values: Array<ProductAttributeProperty>) {
 		super(name, filterType, isSelected);
 		this.values = values;
 	}
+}
+
+export class ListFilter extends ProductFilter {
+	values: Array<ProductAttributeList>;
+
+	constructor(name: string, filterType = "list", isSelected = false, values: Array<ProductAttributeList> = []) {
+		super(name, filterType, isSelected);
+		this.values = values;
+	}
+}
+
+// size variants
+export class SizeVariant {
+	id: number;
+	variant: string;
+	name: string;
+	created_by: User;
+
+	constructor(id: number, variant: string, name: string, created_by: User) {
+		this.id = id;
+		this.variant = variant;
+		this.name = name;
+		this.created_by = created_by;
+	}
+}
+
+export class SpecificSizeVariant extends SizeVariant {
+	quantity: number;
+
+	constructor(id: number, variant: string, name: string, created_by: User, quantity: number) {
+		super(id, variant, name, created_by);
+		this.quantity = quantity;
+	}
+
 }
 

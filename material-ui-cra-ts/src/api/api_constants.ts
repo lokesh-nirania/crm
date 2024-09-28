@@ -11,8 +11,21 @@ export default class api_constants {
 
     allProductsEndpoint = '/api/crm/v1/products';
     filteredProductsEndpoint = '/api/crm/v1/products/v2';
-    productPropertiesEndpoint = '/api/crm/v1/products/properties';
+    productAttributesEndpoint = '/api/crm/v1/products/attributes';
     productFiltersEndpoint = '/api/crm/v1/products/filters';
+    productSizeVariantsEndpoint = '/api/crm/v1/products/size_variants';
 
     addProductEndpoint = '/api/crm/v1/products/add';
+
+    filteredGRNsEndpoint = '/api/crm/v1/grn';
+    addGRNsEndpoint = '/api/crm/v1/grn/add';
+    confirmGRNsEndpoint = '/api/crm/v1/grn/confirm';
+
+    grnWarehousesEndpoint = '/api/crm/v1/grn/warehouse';
+    grnAddWarehouseEndpoint = '/api/crm/v1/grn/warehouse/add';
+
+    grnVendorsEndpoint = '/api/crm/v1/grn/vendor'
+    grnAddVendorsEndpoint = '/api/crm/v1/grn/vendor/add';
+
+    grnSourcesEndpoint = '/api/crm/v1/grn/sources'
 }

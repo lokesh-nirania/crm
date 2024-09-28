@@ -17,53 +17,5 @@
 			"username": "client1",
 			"role": "client"
 		}
-	],
-	"default_products": {
-		"product_categories": [
-			"Cat1",
-			"Cat2",
-			"Cat3"
-		],
-		"product_colors": [
-			"Color1",
-			"Color2",
-			"Color3"
-		],
-		"product_fabrics": [
-			"fabric1",
-			"fabric2",
-			"fabric3"
-		],
-		"product_fits": [
-			"fit1",
-			"fit2",
-			"fit3"
-		],
-		"product_genders": [
-			"gender1",
-			"gender2",
-			"gender3"
-		],
-		"product_size_variants": [
-			"size_variant1",
-			"size_variant2",
-			"size_variant3"
-		],
-		"product_sources": [
-			"source1",
-			"source2",
-			"source3"
-		],
-		"product_sleeves": [
-			"sleeve1",
-			"sleeve2",
-			"sleeve3"
-		],
-		"product_variants": [
-			"variant1",
-			"variant2",
-			"variant3"
-		],
-		"random_products_count": 10
-	}
+	]
 }

@@ -9,9 +9,11 @@
     "@mui/material": "^6.1.1",
     "@mui/x-charts": "^7.18.0",
     "@mui/x-data-grid": "^7.18.0",
+    "@mui/x-date-pickers": "^7.18.0",
     "@types/react": "latest",
     "@types/react-dom": "latest",
     "axios": "^1.7.7",
+    "dayjs": "^1.11.13",
     "notistack": "^3.0.1",
     "react": "latest",
     "react-dom": "latest",
@@ -36,5 +38,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@types/lodash.debounce": "^4.0.9"
   }
 }

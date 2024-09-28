@@ -66,7 +66,7 @@ const Layout: React.FC = () => {
 
 			<Dialog open={openAuthDialog} onClose={handleCloseAuthDialog} maxWidth="xs" fullWidth>
 				<DialogContent>
-					<Auth onLoginSuccess={handleCloseAuthDialog} /> {/* Pass the close function to Auth */}
+					<Auth onLoginSuccess={handleCloseAuthDialog} />
 				</DialogContent>
 			</Dialog>
 		</div>
@@ -144,7 +144,7 @@ function SideBarMenuItems() {
 			{ text: 'Home', path: '/', icon: <Home /> },
 			{ text: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
 			{ text: 'Products', path: '/products', icon: <Inventory /> },
-			{ text: 'GRN', path: '/grn', icon: <Receipt /> },
+			{ text: 'GRN', path: '/grns', icon: <Receipt /> },
 			{ text: 'Orders', path: '/orders', icon: <Shop /> },
 			{ text: 'Shop', path: '/shop', icon: <Shop2 /> },
 			{ text: 'Cart', path: '/cart', icon: <Shop /> },

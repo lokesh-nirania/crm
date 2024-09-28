@@ -15,10 +15,12 @@ type ProductService interface {
 		page, pageSize int,
 		sortBy, sortOrder, name, status string,
 		mrpMin, mrpMax float64,
-		categoryID, fitID, variantID, colorID, fabricID, sleeveID, genderID, sizeVariantID, sourceID []int,
+		categoryID, fitID, variantID, colorID, fabricID, sleeveID, genderID, sourceID []int,
+		sizeVariant string,
 	) (*dto.ProductsPaginatedResponse, error)
-	GetProductProperties(property string) (interface{}, error)
-	GetProductFilters() ([]dto.Filter, error)
+	GetProductAttributes(attribute string) (interface{}, interface{}, error)
+	GetProductFilters() ([]dto.ProductFilter, error)
+	GetProductSizeVariants(varaintName string) (*dto.ProductSizeVariantsResponse, error)
 	AddProduct(c *gin.Context, product dto.AddProductRequest) (*model.Product, error)
 	AddProductProperty(c *gin.Context, name string, value dto.AddProductPropertyRequest) (interface{}, error)
 }
@@ -44,13 +46,15 @@ func (p *productService) GetFilteredProducts(
 	page, pageSize int,
 	sortBy, sortOrder, name, status string,
 	mrpMin, mrpMax float64,
-	categoryID, fitID, variantID, colorID, fabricID, sleeveID, genderID, sizeVariantID, sourceID []int,
+	categoryID, fitID, variantID, colorID, fabricID, sleeveID, genderID, sourceID []int,
+	sizeVariant string,
 ) (*dto.ProductsPaginatedResponse, error) {
 	products, totalItems, err := p.productRepo.GetFilteredProducts(
 		page, pageSize,
 		sortBy, sortOrder, name, status,
 		mrpMin, mrpMax,
-		categoryID, fitID, variantID, colorID, fabricID, sleeveID, genderID, sizeVariantID, sourceID,
+		categoryID, fitID, variantID, colorID, fabricID, sleeveID, genderID, sourceID,
+		sizeVariant,
 	)
 	if err != nil {
 		return nil, err
@@ -67,61 +71,93 @@ func (p *productService) GetFilteredProducts(
 	return resp, nil
 }
 
-func (p *productService) GetProductProperties(property string) (interface{}, error) {
-	properties, err := p.productRepo.GetProductProperties(property)
+func (p *productService) GetProductSizeVariants(varaintName string) (*dto.ProductSizeVariantsResponse, error) {
+	size_variants, err := p.productRepo.GetProductSizeVariants(varaintName)
 	if err != nil {
 		return nil, err
 	}
 
-	return properties, nil
+	sizeVariantResp := &dto.ProductSizeVariantsResponse{}
+	for _, sv := range *size_variants {
+		sizeVariantResp.SizeVariants = append(sizeVariantResp.SizeVariants, dto.SizeVariant{
+			ID:        int(sv.ID),
+			Variant:   string(sv.Variant),
+			Name:      sv.Name,
+			CreatedBy: sv.CreatedBy,
+		})
+	}
+	return sizeVariantResp, nil
 }
 
-func (p *productService) GetProductFilters() ([]dto.Filter, error) {
-	filters := []dto.Filter{
+func (p *productService) GetProductAttributes(attribute string) (interface{}, interface{}, error) {
+	properties, err := p.productRepo.GetProductProperties(attribute)
+
+	if err != nil && err != crmErrors.ERR_INAVLID_PRODUCT_PROPERTY {
+		return nil, nil, err
+	}
+
+	listMap := map[string]interface{}{
+		"size_variants": &[]model.SizeVariantType{model.Alpha, model.Numeric, model.Free},
+	}
+
+	lists, exists := listMap[attribute]
+	if exists && (attribute != "all") {
+		return nil, map[string]interface{}{
+			attribute: lists,
+		}, nil
+	}
+
+	return properties, listMap, nil
+}
+
+func (p *productService) GetProductFilters() ([]dto.ProductFilter, error) {
+	filters := []dto.ProductFilter{
 		{
 			Name:     "category",
-			Type:     "list",
+			Type:     "property",
 			Metadata: &[]model.ProductCategory{},
 		},
 		{
 			Name:     "fit",
-			Type:     "list",
+			Type:     "property",
 			Metadata: &[]model.ProductFit{},
 		},
 		{
 			Name:     "variant",
-			Type:     "list",
+			Type:     "property",
 			Metadata: &[]model.ProductVariant{},
 		},
 		{
 			Name:     "color",
-			Type:     "list",
+			Type:     "property",
 			Metadata: &[]model.ProductColor{},
 		},
 		{
 			Name:     "fabric",
-			Type:     "list",
+			Type:     "property",
 			Metadata: &[]model.ProductFabric{},
 		},
 		{
 			Name:     "sleeve",
-			Type:     "list",
+			Type:     "property",
 			Metadata: &[]model.ProductSleeve{},
 		},
 		{
 			Name:     "gender",
-			Type:     "list",
+			Type:     "property",
 			Metadata: &[]model.ProductGender{},
 		},
 		{
-			Name:     "size_variant",
-			Type:     "list",
-			Metadata: &[]model.ProductSizeVariant{},
+			Name:     "source",
+			Type:     "property",
+			Metadata: &[]model.ProductSource{},
 		},
 		{
-			Name:     "source",
-			Type:     "list",
-			Metadata: &[]model.ProductSource{},
+			Name: "size_variant",
+			Type: "list",
+			Metadata: &[]model.SizeVariantType{
+				model.Alpha, model.Numeric, model.Free,
+			},
 		},
 		{
 			Name: "name",
@@ -133,10 +169,6 @@ func (p *productService) GetProductFilters() ([]dto.Filter, error) {
 		},
 		{
 			Name: "cost_price",
-			Type: "range",
-		},
-		{
-			Name: "sell_price",
 			Type: "range",
 		},
 		{
@@ -158,6 +190,7 @@ func (p *productService) AddProduct(c *gin.Context, product dto.AddProductReques
 		SKU:              product.SKU,
 		Name:             product.Name,
 		Status:           product.Status,
+		Desc:             product.Desc,
 		MRP:              product.MRP,
 		CostPrice:        product.CostPrice,
 		SellPrice:        product.SellPrice,
@@ -168,10 +201,11 @@ func (p *productService) AddProduct(c *gin.Context, product dto.AddProductReques
 		FabricID:         product.FabricID,
 		SleeveID:         product.SleeveID,
 		GenderID:         product.GenderID,
-		SizeVariantID:    product.SizeVariantID,
 		SourceID:         product.SourceID,
+		SizeVariant:      product.SizeVariant,
 		CreatedByID:      userId.(uint),
 		LastModifiedByID: userId.(uint),
+		ImageFileID:      product.ImageFileId,
 	}
 
 	savedProduct, err := p.productRepo.AddProduct(c, productModel)
@@ -205,8 +239,6 @@ func (p *productService) AddProductProperty(c *gin.Context, name string, value d
 		productPropertyDBModel = &model.ProductFit{ProductProperty: productProperty}
 	case "gender":
 		productPropertyDBModel = &model.ProductGender{ProductProperty: productProperty}
-	case "size_variant":
-		productPropertyDBModel = &model.ProductSizeVariant{ProductProperty: productProperty}
 	case "source":
 		productPropertyDBModel = &model.ProductSource{ProductProperty: productProperty}
 	case "sleeve":

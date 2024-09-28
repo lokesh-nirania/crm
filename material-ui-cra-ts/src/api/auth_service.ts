@@ -31,7 +31,7 @@ export const loginApi = async (username: string, password: string): Promise<Logi
             }
         } else {
             // Non-Axios error
-            throw new Error('An unexpected error occurred. Please try again.');
+            throw new Error(`${error}`);
         }
     }
 };
@@ -69,7 +69,7 @@ export const logoutApi = async (): Promise<boolean> => {
             }
         } else {
             // Non-Axios error
-            throw new Error('An unexpected error occurred. Please try again.');
+            throw new Error(`${error}`);
         }
     }
 };
@@ -112,7 +112,7 @@ export const isLoggedIn = async (): Promise<boolean> => {
             }
         } else {
             // Non-Axios error
-            throw new Error('An unexpected error occurred. Please try again.');
+            throw new Error(`${error}`);
         }
     }
 };

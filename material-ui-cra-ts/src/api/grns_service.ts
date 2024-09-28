@@ -1,15 +1,12 @@
 import axios from 'axios';
-import LoginResponse from '../model/auth';
-import PingResponse from '../model/auth';
 import api_constants from './api_constants';
-import User from '../model/user';
-import Product, { FilteredProductsResponse, FiltersResponse, LikeFilter, PropertyFilter, ProductFilter, ProductFormDataRequest, ProductFormDataResponse, ProductAttributesResponse, ProductAttributeProperty, ProductPropertyAddResponse, RangeFilter, ListFilter, ProductAttributeList, SizeVariantListResponse } from '../model/product';
-import ProductFilterResponse from '../model/product';
+import { PropertyFilter, ProductFilter, ListFilter } from '../model/product';
+import { FilteredGRNsResponse, GetGRNSourcesResponse, GetGRNVendorResponse, AddGRNWarehouseRequest, GetGRNWarehouseResponse, AddGRNWarehouseResponse, AddGRNVendorRequest, AddGRNVendorResponse, AddGRNFormDataRequest, AddGRNResponse, ConfirmGRNRequest } from '../model/grns';
 
 const constants = new api_constants();
 
-export const getAllFilteredProducts = async (filters: Array<ProductFilter>, pageNo: number, pageSize: number): Promise<FilteredProductsResponse> => {
-    const url = constants.baseUrl + constants.filteredProductsEndpoint;
+export const getAllFilteredGRNs = async (filters: Array<ProductFilter>, pageNo: number, pageSize: number): Promise<FilteredGRNsResponse> => {
+    const url = constants.baseUrl + constants.filteredGRNsEndpoint;
     try {
         console.log("try begin")
         const token = localStorage.getItem('authToken');
@@ -52,12 +49,6 @@ export const getAllFilteredProducts = async (filters: Array<ProductFilter>, page
                     params.append(f.name, selectedValues);
                 }
             }
-            else if (f instanceof LikeFilter) {
-                console.log(JSON.stringify(f))
-                if (f.content !== "") {
-                    params.append(f.name, f.content);
-                }
-            }
         });
 
         const queryString = params.toString();
@@ -65,7 +56,7 @@ export const getAllFilteredProducts = async (filters: Array<ProductFilter>, page
 
 
 
-        const response = await axios.get<FilteredProductsResponse>(fullUrl, {
+        const response = await axios.get<FilteredGRNsResponse>(fullUrl, {
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${token}`, // Use template literal for token interpolation
@@ -96,63 +87,28 @@ export const getAllFilteredProducts = async (filters: Array<ProductFilter>, page
 
 }
 
-export const getAllFilters = async (): Promise<Array<ProductFilter>> => {
-    const url = constants.baseUrl + constants.productFiltersEndpoint;
+export const postGRNData = async (productForm: AddGRNFormDataRequest): Promise<AddGRNResponse> => {
+    const url = constants.baseUrl + constants.addGRNsEndpoint;
     try {
         const token = localStorage.getItem('authToken');
         if (token === null) {
             throw new Error(`User is logged out`);
         }
 
-        const response = await axios.get<FiltersResponse>(url, {
+        const response = await axios.post<AddGRNResponse>(url, productForm, {
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${token}`, // Use template literal for token interpolation
             },
-
         });
 
-        const filters: Array<ProductFilter> = [];
-
-        response.data.filters.forEach((f) => {
-            if (f.type == "property") {
-                let pas: Array<ProductAttributeProperty> = [];
-                f.metadata.forEach((m: { [x: string]: any; }) => {
-                    if (typeof (m) === "object") {
-                        const p = new ProductAttributeProperty(m['ID'], m['name'], false)
-                        pas.push(p);
-                    }
-                });
-                let propertyfilter = new PropertyFilter(f.name, "property", false, pas);
-                filters.push(propertyfilter)
-            }
-            else if (f.type == "range") {
-                let rangefilter = new RangeFilter(f.name);
-                filters.push(rangefilter)
-            }
-            else if (f.type == "like") {
-                let likefilter = new LikeFilter(f.name);
-                filters.push(likefilter)
-            }
-            else if (f.type == "list") {
-                let pas: Array<ProductAttributeList> = [];
-                f.metadata.forEach((m: string) => {
-                    const p = new ProductAttributeList(m, false)
-                    pas.push(p);
-
-                });
-                let propertyfilter = new ListFilter(f.name, "list", false, pas);
-                filters.push(propertyfilter)
-            }
-        });
-
-        return filters;
+        return response.data;
     } catch (error) {
         if (axios.isAxiosError(error)) {
             // Handle different Axios-specific errors
             if (error.response) {
                 // Server responded with a status other than 2xx
-                throw new Error(`Login failed: ${error.response.data.message || 'Unknown error'}`);
+                throw new Error(`Add GRN Failed: ${error.response.data.error || 'Unknown error'}`);
             } else if (error.request) {
                 // No response received from the server
                 throw new Error('No response from the server. Please try again later.');
@@ -165,18 +121,54 @@ export const getAllFilters = async (): Promise<Array<ProductFilter>> => {
             throw new Error(`${error}`);
         }
     }
-
 }
 
-export const getProductAttributes = async (attribute: string): Promise<ProductAttributesResponse> => {
-    const url = constants.baseUrl + constants.productAttributesEndpoint + "?attribute=" + (attribute === "" ? "all" : attribute);
+export const confirmGRNData = async (productForm: ConfirmGRNRequest): Promise<AddGRNResponse> => {
+    const url = constants.baseUrl + constants.confirmGRNsEndpoint;
     try {
         const token = localStorage.getItem('authToken');
         if (token === null) {
             throw new Error(`User is logged out`);
         }
 
-        const response = await axios.get<ProductAttributesResponse>(url, {
+        const response = await axios.post<AddGRNResponse>(url, productForm, {
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`, // Use template literal for token interpolation
+            },
+        });
+
+        return response.data;
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            // Handle different Axios-specific errors
+            if (error.response) {
+                // Server responded with a status other than 2xx
+                throw new Error(`Confirm GRN Failed: ${error.response.data.error || 'Unknown error'}`);
+            } else if (error.request) {
+                // No response received from the server
+                throw new Error('No response from the server. Please try again later.');
+            } else {
+                // Error during request setup
+                throw new Error('Login request failed. Please try again.');
+            }
+        } else {
+            // Non-Axios error
+            throw new Error(`${error}`);
+        }
+    }
+}
+
+// GRN Properties 
+export const getGRNWarehouses = async (): Promise<GetGRNWarehouseResponse> => {
+    const url = constants.baseUrl + constants.grnWarehousesEndpoint;
+    try {
+        const token = localStorage.getItem('authToken');
+        if (token === null) {
+            throw new Error(`User is logged out`);
+        }
+
+        const response = await axios.get<GetGRNWarehouseResponse>(url, {
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${token}`, // Use template literal for token interpolation
@@ -204,15 +196,15 @@ export const getProductAttributes = async (attribute: string): Promise<ProductAt
     }
 }
 
-export const getSizeVariants = async (variant: string): Promise<SizeVariantListResponse> => {
-    const url = constants.baseUrl + constants.productSizeVariantsEndpoint + "/" + variant;
+export const getGRNVendors = async (): Promise<GetGRNVendorResponse> => {
+    const url = constants.baseUrl + constants.grnVendorsEndpoint;
     try {
         const token = localStorage.getItem('authToken');
         if (token === null) {
             throw new Error(`User is logged out`);
         }
 
-        const response = await axios.get<SizeVariantListResponse>(url, {
+        const response = await axios.get<GetGRNVendorResponse>(url, {
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${token}`, // Use template literal for token interpolation
@@ -225,13 +217,13 @@ export const getSizeVariants = async (variant: string): Promise<SizeVariantListR
             // Handle different Axios-specific errors
             if (error.response) {
                 // Server responded with a status other than 2xx
-                throw new Error(`Size Variant Fetch Failed : ${error.response.data.message || 'Unknown error'}`);
+                throw new Error(`Login failed: ${error.response.data.message || 'Unknown error'}`);
             } else if (error.request) {
                 // No response received from the server
                 throw new Error('No response from the server. Please try again later.');
             } else {
                 // Error during request setup
-                throw new Error('Size Variant Fetch Failed. Please try again.');
+                throw new Error('Login request failed. Please try again.');
             }
         } else {
             // Non-Axios error
@@ -240,24 +232,58 @@ export const getSizeVariants = async (variant: string): Promise<SizeVariantListR
     }
 }
 
-export const postProductForm = async (productForm: ProductFormDataRequest): Promise<ProductFormDataRequest> => {
-    const url = constants.baseUrl + constants.addProductEndpoint;
+export const getGRNSources = async (): Promise<GetGRNSourcesResponse> => {
+    const url = constants.baseUrl + constants.grnSourcesEndpoint;
     try {
         const token = localStorage.getItem('authToken');
         if (token === null) {
             throw new Error(`User is logged out`);
         }
 
-        console.log("------>", JSON.stringify(productForm))
-
-        const response = await axios.post<ProductFormDataResponse>(url, productForm, {
+        const response = await axios.get<GetGRNSourcesResponse>(url, {
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${token}`, // Use template literal for token interpolation
             },
         });
 
-        return response.data.product;
+        return response.data;
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            // Handle different Axios-specific errors
+            if (error.response) {
+                // Server responded with a status other than 2xx
+                throw new Error(`Login failed: ${error.response.data.message || 'Unknown error'}`);
+            } else if (error.request) {
+                // No response received from the server
+                throw new Error('No response from the server. Please try again later.');
+            } else {
+                // Error during request setup
+                throw new Error('Login request failed. Please try again.');
+            }
+        } else {
+            // Non-Axios error
+            throw new Error(`${error}`);
+        }
+    }
+}
+
+export const postWarehouseData = async (productForm: AddGRNWarehouseRequest): Promise<AddGRNWarehouseResponse> => {
+    const url = constants.baseUrl + constants.grnAddWarehouseEndpoint;
+    try {
+        const token = localStorage.getItem('authToken');
+        if (token === null) {
+            throw new Error(`User is logged out`);
+        }
+
+        const response = await axios.post<AddGRNWarehouseResponse>(url, productForm, {
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`, // Use template literal for token interpolation
+            },
+        });
+
+        return response.data;
     } catch (error) {
         if (axios.isAxiosError(error)) {
             // Handle different Axios-specific errors
@@ -278,17 +304,15 @@ export const postProductForm = async (productForm: ProductFormDataRequest): Prom
     }
 }
 
-export const postProductProperty = async (propertyName: string, property: ProductAttributeProperty): Promise<ProductPropertyAddResponse> => {
-    const url = constants.baseUrl + constants.addProductEndpoint + "/" + propertyName;
+export const postVendorData = async (productForm: AddGRNVendorRequest): Promise<AddGRNVendorResponse> => {
+    const url = constants.baseUrl + constants.grnAddVendorsEndpoint;
     try {
         const token = localStorage.getItem('authToken');
         if (token === null) {
             throw new Error(`User is logged out`);
         }
 
-        console.log("------>", JSON.stringify(propertyName), JSON.stringify(propertyName))
-
-        const response = await axios.post<ProductPropertyAddResponse>(url, property, {
+        const response = await axios.post<AddGRNVendorResponse>(url, productForm, {
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${token}`, // Use template literal for token interpolation
@@ -301,7 +325,7 @@ export const postProductProperty = async (propertyName: string, property: Produc
             // Handle different Axios-specific errors
             if (error.response) {
                 // Server responded with a status other than 2xx
-                throw new Error(`Add Product Property Failed: ${error.response.data.error || 'Unknown error'}`);
+                throw new Error(`Add Product Failed: ${error.response.data.error || 'Unknown error'}`);
             } else if (error.request) {
                 // No response received from the server
                 throw new Error('No response from the server. Please try again later.');
@@ -315,3 +339,4 @@ export const postProductProperty = async (propertyName: string, property: Produc
         }
     }
 }
+

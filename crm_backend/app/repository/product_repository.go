@@ -15,11 +15,14 @@ type ProductRepo interface {
 		page, pageSize int,
 		sortBy, sortOrder, name, status string,
 		mrpMin, mrpMax float64,
-		categoryID, fitID, variantID, colorID, fabricID, sleeveID, genderID, sizeVariantID, sourceID []int,
+		categoryID, fitID, variantID, colorID, fabricID, sleeveID, genderID, sourceID []int,
+		sizeVariant string,
 	) (*[]model.Product, int64, error)
 
 	GetProductProperties(property string) (map[string]interface{}, error)
-	GetProductFilters(filters []dto.Filter) ([]dto.Filter, error)
+	GetProductFilters(filters []dto.ProductFilter) ([]dto.ProductFilter, error)
+	GetProductSizeVariants(varaintName string) (*[]model.SizeVariant, error)
+
 	AddProduct(c *gin.Context, product *model.Product) (*model.Product, error)
 	AddProductProperty(c *gin.Context, property interface{}) (interface{}, error)
 }
@@ -42,7 +45,6 @@ func (p *productRepository) GetAllProducts() (*[]model.Product, error) {
 		Preload("Fabric").
 		Preload("Sleeve").
 		Preload("Gender").
-		Preload("SizeVariant").
 		Preload("Source").
 		Find(&products).Error; err != nil {
 		return nil, err
@@ -55,7 +57,8 @@ func (p *productRepository) GetFilteredProducts(
 	page, pageSize int,
 	sortBy, sortOrder, name, status string,
 	mrpMin, mrpMax float64,
-	categoryID, fitID, variantID, colorID, fabricID, sleeveID, genderID, sizeVariantID, sourceID []int,
+	categoryID, fitID, variantID, colorID, fabricID, sleeveID, genderID, sourceID []int,
+	sizeVariant string,
 ) (*[]model.Product, int64, error) {
 
 	var products []model.Product
@@ -94,11 +97,11 @@ func (p *productRepository) GetFilteredProducts(
 	if len(genderID) > 0 {
 		query = query.Where("gender_id IN ?", genderID)
 	}
-	if len(sizeVariantID) > 0 {
-		query = query.Where("size_variant_id IN ?", sizeVariantID)
-	}
 	if len(sourceID) > 0 {
 		query = query.Where("source_id IN ?", sourceID)
+	}
+	if sizeVariant != "" {
+		query = query.Where("size_variant = ?", sizeVariant)
 	}
 
 	query.Count(&totalItems)
@@ -116,7 +119,6 @@ func (p *productRepository) GetFilteredProducts(
 		Preload("Fabric").
 		Preload("Sleeve").
 		Preload("Gender").
-		Preload("SizeVariant").
 		Preload("Source").
 		Find(&products).Error; err != nil {
 		return nil, 0, err
@@ -125,23 +127,42 @@ func (p *productRepository) GetFilteredProducts(
 	return &products, totalItems, nil
 }
 
+func (p *productRepository) GetProductSizeVariants(variantName string) (*[]model.SizeVariant, error) {
+	var sizeVariants []model.SizeVariant
+
+	// Pass a pointer to the slice
+	if err := p.db.
+		Model(&model.SizeVariant{}).
+		Where("variant = ?", variantName).
+		Find(&sizeVariants).Error; err != nil {
+		return nil, err
+	}
+
+	return &sizeVariants, nil
+}
+
 func (p *productRepository) GetProductProperties(property string) (map[string]interface{}, error) {
 	// Initialize a map to store the properties dynamically
 	propertyMap := map[string]interface{}{
-		"categories":    &[]model.ProductCategory{},
-		"fits":          &[]model.ProductFit{},
-		"variants":      &[]model.ProductVariant{},
-		"colors":        &[]model.ProductColor{},
-		"fabrics":       &[]model.ProductFabric{},
-		"sleeves":       &[]model.ProductSleeve{},
-		"genders":       &[]model.ProductGender{},
-		"size_variants": &[]model.ProductSizeVariant{},
-		"sources":       &[]model.ProductSource{},
+		"categories": &[]model.ProductCategory{},
+		"fits":       &[]model.ProductFit{},
+		"variants":   &[]model.ProductVariant{},
+		"colors":     &[]model.ProductColor{},
+		"fabrics":    &[]model.ProductFabric{},
+		"sleeves":    &[]model.ProductSleeve{},
+		"genders":    &[]model.ProductGender{},
+		"sources":    &[]model.ProductSource{},
 	}
 
 	// If "all" is requested, fetch all the properties
 	if property == "all" {
 		// Iterate over all properties and fetch data
+		for _, prop := range propertyMap {
+			if err := p.db.Find(prop).Error; err != nil {
+				return nil, err
+			}
+		}
+
 		for _, prop := range propertyMap {
 			if err := p.db.Find(prop).Error; err != nil {
 				return nil, err
@@ -168,9 +189,9 @@ func (p *productRepository) GetProductProperties(property string) (map[string]in
 	}, nil
 }
 
-func (p *productRepository) GetProductFilters(filters []dto.Filter) ([]dto.Filter, error) {
+func (p *productRepository) GetProductFilters(filters []dto.ProductFilter) ([]dto.ProductFilter, error) {
 	for _, prop := range filters {
-		if prop.Type == "list" {
+		if prop.Type == "property" {
 			if err := p.db.Find(prop.Metadata).Error; err != nil {
 				return nil, err
 			}
@@ -182,9 +203,20 @@ func (p *productRepository) GetProductFilters(filters []dto.Filter) ([]dto.Filte
 }
 
 func (p *productRepository) AddProduct(c *gin.Context, product *model.Product) (*model.Product, error) {
-	if err := p.db.Create(product).Error; err != nil {
+	// Start a new transaction
+	tx := p.db.Begin()
+
+	// Create the Product in the database
+	if err := tx.Create(product).Error; err != nil {
+		tx.Rollback()
 		return nil, err
 	}
+
+	// Commit the transaction if everything is successful
+	if err := tx.Commit().Error; err != nil {
+		return nil, err
+	}
+
 	return product, nil
 }
 

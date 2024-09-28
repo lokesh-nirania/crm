@@ -9,7 +9,7 @@ import Profile from './pages/Profile';
 import { AuthProvider } from './providers/AuthContext'; // Import the AuthProvider
 import { Shop } from '@mui/icons-material';
 import Home from './pages/Home';
-import ProductForm from './components/ProductForm';
+import GRNs from './pages/GRNs';
 
 // Create other page components like GRN, Orders
 
@@ -30,6 +30,7 @@ const App: React.FC = () => {
               <Route index element={<Home />} />
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="products" element={<Products />} />
+              <Route path="grns" element={<GRNs />} />
               <Route path="profile" element={<Profile />} />
               <Route path="shop" element={<Shop />} />
               {/* Add other routes */}

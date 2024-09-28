@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { TextField, Switch, FormControl, InputLabel, MenuItem, Button, Grid2 as Grid, Paper, styled, Box, Card, OutlinedInput, InputAdornment, Checkbox, FormGroup, FormControlLabel, Dialog, DialogContent, DialogTitle, DialogActions, DialogContentText } from '@mui/material';
+import React, { useState, useEffect, useRef } from 'react';
+import { TextField, Switch, FormControl, InputLabel, MenuItem, Button, Grid2 as Grid, Paper, styled, Box, Card, OutlinedInput, InputAdornment, Checkbox, FormGroup, FormControlLabel, Dialog, DialogContent, DialogTitle, DialogActions, DialogContentText, CircularProgress } from '@mui/material';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
-import { ProductFormDataRequest, ProductProperty } from '../model/product';
-import { getProductProperties, postProductForm, postProductProperty } from '../api/product_service';
+import Product, { ProductFormDataRequest, ProductAttributeProperty } from '../model/product';
+import { getProductAttributes, postProductForm, postProductProperty } from '../api/product_service';
 import { enqueueSnackbar } from 'notistack';
+import ImageUploadPreview from './ImageUploadPreview';
 // Define types for your dropdown options and product data
 
 
@@ -12,58 +13,82 @@ const ProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
 	const [openTitle, setOpenTitle] = React.useState("");
 	const [openLabel, setOpenLabel] = React.useState("");
 	const [openKey, setOpenKey] = React.useState("");
-	const [openValue, setOpenValue] = React.useState<ProductProperty>({ ID: 0, name: "", isChecked: false });
+	const [openValue, setOpenValue] = React.useState<ProductAttributeProperty>({ ID: 0, name: "", isChecked: false });
 
 	const handleClose = () => {
 		setOpen(false);
 	};
 
-	// Form state with types
-	const [productData, setProductData] = useState<ProductFormDataRequest>({
-		id: 0,
-		sku: "",
-		name: "",
-		status: false,
-		mrp: 0,
-		cost_price: 0,
-		sell_price: 0,
-		category_id: 0,
-		fit_id: 0,
-		variant_id: 0,
-		color_id: 0,
-		fabric_id: 0,
-		sleeve_id: 0,
-		gender_id: 0,
-		size_variant_id: 0,
-		source_id: 0,
-	});
-
 	const [isLoading, setIsLoading] = useState(false);
 
-	// Dropdown options state (you'll fetch these from APIs)
-	const [categoryOptions, setCategoryOptions] = useState<ProductProperty[]>([]);
-	const [fitOptions, setFitOptions] = useState<ProductProperty[]>([]);
-	const [variantOptions, setVariantOptions] = useState<ProductProperty[]>([]);
-	const [colorOptions, setColorOptions] = useState<ProductProperty[]>([]);
-	const [fabricOptions, setFabricOptions] = useState<ProductProperty[]>([]);
-	const [sleeveOptions, setSleeveOptions] = useState<ProductProperty[]>([]);
-	const [genderOptions, setGenderOptions] = useState<ProductProperty[]>([]);
-	const [sizeVariantOptions, setSizeVariantOptions] = useState<ProductProperty[]>([]);
-	const [sourceOptions, setSourceOptions] = useState<ProductProperty[]>([]);
+	const [sku, setSKU] = useState("");
+	const [name, setName] = useState("");
+	const [desc, setDesc] = useState("");
+	const [costPrice, setCostPrice] = useState(0);
+	const [sellPrice, setSellPrice] = useState(0);
+	const [mrp, setMRP] = useState(0);
+
+	const [categoryOptions, setCategoryOptions] = useState<ProductAttributeProperty[]>([]);
+	const [selectedCategory, setSelectedCategory] = useState<ProductAttributeProperty | null>(null);
+
+	const [fitOptions, setFitOptions] = useState<ProductAttributeProperty[]>([]);
+	const [selectedFit, setSelectedFit] = useState<ProductAttributeProperty | null>(null);
+
+	const [variantOptions, setVariantOptions] = useState<ProductAttributeProperty[]>([]);
+	const [selectedVariant, setSelectedVariant] = useState<ProductAttributeProperty | null>(null);
+
+	const [colorOptions, setColorOptions] = useState<ProductAttributeProperty[]>([]);
+	const [selectedColor, setSelectedColor] = useState<ProductAttributeProperty | null>(null);
+
+	const [fabricOptions, setFabricOptions] = useState<ProductAttributeProperty[]>([]);
+	const [selectedFabric, setSelectedFabric] = useState<ProductAttributeProperty | null>(null);
+
+	const [sleeveOptions, setSleeveOptions] = useState<ProductAttributeProperty[]>([]);
+	const [selectedSleeve, setSelectedSleeve] = useState<ProductAttributeProperty | null>(null);
+
+	const [genderOptions, setGenderOptions] = useState<ProductAttributeProperty[]>([]);
+	const [selectedGender, setSelectedGender] = useState<ProductAttributeProperty | null>(null);
+
+	const [sourceOptions, setSourceOptions] = useState<ProductAttributeProperty[]>([]);
+	const [selectedSource, setSelectedSource] = useState<ProductAttributeProperty | null>(null);
+
+	const [sizeVariantOptions, setSizeVariantOptions] = useState<string[]>([]);
+	const [selectedSizeVariant, setSelectedSizeVariant] = useState<string>("");
+
+	const [selectedImage, setSelectedImage] = useState<File | null>(null);
+	const [imageUploading, isImageUploading] = useState(false);
+	const [imagePreview, setImagePreview] = useState<string>("");
+	const [uploadedImageFileID, setUploadedImageFileID] = useState<string>("");
+	const inputRef = useRef<HTMLInputElement | null>(null); // Ref to the file input
 
 	const fetchProductProperties = async () => {
 		try {
 
-			const f = await getProductProperties("all");
+			const f = await getProductAttributes("all");
+
+
 			setCategoryOptions(f.properties.categories);
 			setFitOptions(f.properties.fits);
-			setVariantOptions(f.properties.variants)
-			setColorOptions(f.properties.colors)
-			setFabricOptions(f.properties.fabrics)
-			setSleeveOptions(f.properties.sleeves)
-			setGenderOptions(f.properties.genders)
-			setSizeVariantOptions(f.properties.size_variants)
-			setSourceOptions(f.properties.sources)
+			setVariantOptions(f.properties.variants);
+			setColorOptions(f.properties.colors);
+			setFabricOptions(f.properties.fabrics);
+			setSleeveOptions(f.properties.sleeves);
+			setGenderOptions(f.properties.genders);
+			setSizeVariantOptions(f.lists.size_variants);
+			setSourceOptions(f.properties.sources);
+
+
+			setSelectedCategory(f.properties.categories.length > 0 ? f.properties.categories[0] : null);
+			setSelectedFit(f.properties.fits.length > 0 ? f.properties.fits[0] : null);
+			setSelectedVariant(f.properties.variants.length > 0 ? f.properties.variants[0] : null);
+			setSelectedColor(f.properties.colors.length > 0 ? f.properties.colors[0] : null);
+			setSelectedFabric(f.properties.fabrics.length > 0 ? f.properties.fabrics[0] : null);
+			setSelectedSleeve(f.properties.sleeves.length > 0 ? f.properties.sleeves[0] : null);
+			setSelectedGender(f.properties.genders.length > 0 ? f.properties.genders[0] : null);
+			setSelectedSizeVariant(f.lists.size_variants.length > 0 ? f.lists.size_variants[0] : "");
+			setSelectedSource(f.properties.sources.length > 0 ? f.properties.sources[0] : null);
+
+
 		} catch (error: any) {
 			enqueueSnackbar(error.message, { variant: 'error' }); // Show error notification
 		}
@@ -72,6 +97,26 @@ const ProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
 	const saveProduct = async () => {
 		try {
 			setIsLoading(true);
+			const productData: ProductFormDataRequest = {
+				id: 0,
+				sku: sku,
+				name: name,
+				status: false,
+				description: desc,
+				mrp: mrp,
+				cost_price: costPrice,
+				sell_price: sellPrice,
+				category_id: selectedCategory?.ID ?? 0,
+				fit_id: selectedFit?.ID ?? 0,
+				variant_id: selectedVariant?.ID ?? 0,
+				color_id: selectedColor?.ID ?? 0,
+				fabric_id: selectedFabric?.ID ?? 0,
+				sleeve_id: selectedSleeve?.ID ?? 0,
+				gender_id: selectedGender?.ID ?? 0,
+				source_id: selectedSource?.ID ?? 0,
+				size_variant: selectedSizeVariant,
+				image_file_id: uploadedImageFileID,
+			};
 			await postProductForm(productData);
 			enqueueSnackbar("Product Added Successfully", { variant: 'success' });
 			onSuccess();
@@ -138,12 +183,12 @@ const ProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
 					]);
 					break;
 
-				case "size_variant":
-					setSizeVariantOptions((prevSizeVariantOp) => [
-						...prevSizeVariantOp,
-						newP.property
-					]);
-					break;
+				// case "size_variant":
+				// 	setSizeVariantOptions((prevSizeVariantOp) => [
+				// 		...prevSizeVariantOp,
+				// 		newP.property
+				// 	]);
+				// 	break;
 
 				case "source":
 					setSourceOptions((prevSourceOp) => [
@@ -164,13 +209,6 @@ const ProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
 		}
 	}
 
-	const handleTextFieldInput = (key: string, value: string | number) => {
-		setProductData((prevProductData) => ({
-			...prevProductData,
-			[key]: value,
-		}));
-	};
-
 
 	// Fetch dropdown data from APIs
 	useEffect(() => {
@@ -184,6 +222,64 @@ const ProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
 		saveProduct();
 	};
 
+	const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		isImageUploading(true);
+		const files = e.target.files;
+		if (files && files.length > 0) {
+			const selectedFilesArray = Array.from(files);
+			setSelectedImage(selectedFilesArray[0]);
+
+			const previews = URL.createObjectURL(selectedFilesArray[0])
+			setImagePreview(previews);
+
+			const formData = new FormData();
+			formData.append('file', selectedFilesArray[0]);
+
+			try {
+				// Upload image
+				const response = await fetch('http://localhost:8081/submit', {
+					method: 'POST',
+					body: formData,
+				});
+
+				if (response.ok) {
+					const result = await response.json();
+					console.log('File uploaded successfully:', result);
+
+					// Retrieve the file ID from the response (fid)
+					const fileId = result.fid;
+					console.log('File ID:', fileId);
+					setUploadedImageFileID(fileId);
+
+					enqueueSnackbar("Image upload success", { variant: 'success' });
+
+					// Do something with the fileId (e.g., store it or pass it along in another request)
+				} else {
+					enqueueSnackbar("Image upload failed", { variant: 'error' }); // Show error notification
+					console.error('Image upload failed');
+					handleRemove();
+				}
+			} catch (error: any) {
+				enqueueSnackbar(error.message, { variant: 'error' }); // Show error notification
+				console.error('Error uploading image:', error);
+				handleRemove();
+			}
+		}
+
+
+		isImageUploading(false);
+	};
+
+
+
+	const handleRemove = () => {
+		setSelectedImage(null);
+		setImagePreview("");
+
+		if (inputRef.current) {
+			inputRef.current.value = ""; // Clear the file input value
+		}
+	};
 
 
 	return (
@@ -191,19 +287,71 @@ const ProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
 			<form onSubmit={handleSubmit}>
 				<Box sx={{ mt: 2 }}>
 					<Grid container spacing={2}>
+						<Grid size={9}>
+							<OutlinedInput
+								fullWidth
+								type="file"
+								size="small"
+								inputProps={{ accept: 'image/*', multiple: false }}
+								onChange={handleImageSelect}
+								inputRef={inputRef}
+							/>
+						</Grid>
+						{imagePreview !== "" && <Grid size={3}>
+							<Button variant="outlined" fullWidth color="secondary" onClick={handleRemove}>
+								Remove
+							</Button>
+						</Grid>}
+						{imagePreview !== "" && <Grid size={12}>
+							<Box
+								mb={2}
+								sx={{ p: 2, border: '1px dashed grey' }}
+							>
+								{/* Image Element */}
+								<img
+									src={imagePreview}
+									alt="preview"
+									height="200"
+									onError={(e) => {
+										e.currentTarget.style.display = 'none'; // Hide the image if there's an error loading the URL
+									}}
+									style={{
+										filter: imageUploading ? 'grayscale(100%)' : 'none', // Apply grayscale filter when loading
+										opacity: imageUploading ? 0.5 : 1, // Reduce opacity when loading
+										transition: 'opacity 0.3s ease', // Smooth transition when loading completes
+									}}
+								// onLoad={handleImageLoad} // Call this when the image has fully loaded
+								/>
+
+								{/* Loader Overlay */}
+								{imageUploading && (
+									<CircularProgress
+										sx={{
+
+											top: '50%',             // Center the loader vertically
+											left: '50%',            // Center the loader horizontally
+											transform: 'translate(-50%, -50%)', // Proper centering
+										}}
+									/>
+								)}
+							</Box>
+						</Grid>}
 						<Grid size={5}>
 							<TextField id="sku" label="SKU" variant="outlined" fullWidth size="small"
+								value={sku}
 								onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-									handleTextFieldInput("sku", event.target.value)
+									setSKU(event.target.value)
 								}}
+
 							/>
 						</Grid>
 						<Grid size={5}>
 							<TextField id="name" label="Name" variant="outlined" fullWidth size="small"
+								value={name}
 								onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-									handleTextFieldInput("name", event.target.value)
-
+									setName(event.target.value)
 								}}
+
 							/>
 						</Grid>
 						<Grid size={2}>
@@ -219,10 +367,11 @@ const ProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
 									startAdornment={<InputAdornment position="start">₹</InputAdornment>}
 									label="MRP"
 									type='number'
+									value={mrp}
 									onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-										handleTextFieldInput("mrp", Number(event.target.value))
-
+										setMRP(Number(event.target.value))
 									}}
+
 								/>
 							</FormControl>
 						</Grid>
@@ -234,10 +383,11 @@ const ProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
 									startAdornment={<InputAdornment position="start">₹</InputAdornment>}
 									label="Cost Price"
 									type='number'
+									value={costPrice}
 									onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-										handleTextFieldInput("cost_price", Number(event.target.value))
-
+										setCostPrice(Number(event.target.value))
 									}}
+
 								/>
 							</FormControl>
 						</Grid>
@@ -249,10 +399,11 @@ const ProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
 									startAdornment={<InputAdornment position="start">₹</InputAdornment>}
 									label="Sell Price"
 									type='number'
+									value={sellPrice}
 									onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-										handleTextFieldInput("sell_price", Number(event.target.value))
-
+										setSellPrice(Number(event.target.value))
 									}}
+
 								/>
 							</FormControl>
 						</Grid>
@@ -262,10 +413,10 @@ const ProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
 								select
 								label="Category"
 								fullWidth size="small"
+								value={selectedCategory?.name ?? ""}
 								onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-									const selectedOption = categoryOptions.find(option => option.name === event.target.value);
-									handleTextFieldInput("category_id", selectedOption?.ID ?? 0)
-
+									const selectedOption = categoryOptions.find(option => option.name === event.target.value) || null;
+									setSelectedCategory(selectedOption);
 								}}
 								helperText={
 									<Box display="flex" justifyContent="end">
@@ -281,6 +432,7 @@ const ProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
 										</Button>
 									</Box>
 								}
+
 							>
 								{categoryOptions.map((option) => (
 									<MenuItem key={option.name} value={option.name}>
@@ -295,10 +447,10 @@ const ProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
 								select
 								label="Fit"
 								fullWidth size="small"
+								value={selectedFit?.name ?? ""}
 								onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-									const selectedOption = fitOptions.find(option => option.name === event.target.value);
-									handleTextFieldInput("fit_id", selectedOption?.ID ?? 0)
-
+									const selectedOption = fitOptions.find(option => option.name === event.target.value) || null;
+									setSelectedFit(selectedOption);
 								}}
 								helperText={
 									<Box display="flex" justifyContent="end">
@@ -314,6 +466,7 @@ const ProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
 										</Button>
 									</Box>
 								}
+
 							>
 								{fitOptions.map((option) => (
 									<MenuItem key={option.name} value={option.name}>
@@ -328,9 +481,10 @@ const ProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
 								select
 								label="Variant"
 								fullWidth size="small"
+								value={selectedVariant?.name ?? ""}
 								onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-									const selectedOption = variantOptions.find(option => option.name === event.target.value);
-									handleTextFieldInput("variant_id", selectedOption?.ID ?? 0)
+									const selectedOption = variantOptions.find(option => option.name === event.target.value) || null;
+									setSelectedVariant(selectedOption)
 
 								}}
 								helperText={
@@ -347,6 +501,7 @@ const ProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
 										</Button>
 									</Box>
 								}
+
 							>
 								{variantOptions.map((option) => (
 									<MenuItem key={option.name} value={option.name}>
@@ -361,10 +516,10 @@ const ProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
 								select
 								label="Color"
 								fullWidth size="small"
+								value={selectedColor?.name ?? ""}
 								onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-									const selectedOption = colorOptions.find(option => option.name === event.target.value);
-									handleTextFieldInput("color_id", selectedOption?.ID ?? 0)
-
+									const selectedOption = colorOptions.find(option => option.name === event.target.value) || null;
+									setSelectedColor(selectedOption)
 								}}
 								helperText={
 									<Box display="flex" justifyContent="end">
@@ -380,6 +535,7 @@ const ProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
 										</Button>
 									</Box>
 								}
+
 							>
 								{colorOptions.map((option) => (
 									<MenuItem key={option.name} value={option.name}>
@@ -394,11 +550,12 @@ const ProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
 								select
 								label="Fabric"
 								fullWidth size="small"
+								value={selectedFabric?.name ?? ""}
 								onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-									const selectedOption = fabricOptions.find(option => option.name === event.target.value);
-									handleTextFieldInput("fabric_id", selectedOption?.ID ?? 0)
-
+									const selectedOption = fabricOptions.find(option => option.name === event.target.value) || null;
+									setSelectedFabric(selectedOption)
 								}}
+
 								helperText={
 									<Box display="flex" justifyContent="end">
 										<Button size='small' variant="text" color="primary"
@@ -427,10 +584,10 @@ const ProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
 								select
 								label="Sleeve"
 								fullWidth size="small"
+								value={selectedSleeve?.name ?? ""}
 								onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-									const selectedOption = sleeveOptions.find(option => option.name === event.target.value);
-									handleTextFieldInput("sleeve_id", selectedOption?.ID ?? 0)
-
+									const selectedOption = sleeveOptions.find(option => option.name === event.target.value) || null;
+									setSelectedSleeve(selectedOption)
 								}}
 								helperText={
 									<Box display="flex" justifyContent="end">
@@ -446,6 +603,7 @@ const ProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
 										</Button>
 									</Box>
 								}
+
 							>
 								{sleeveOptions.map((option) => (
 									<MenuItem key={option.name} value={option.name}>
@@ -460,25 +618,12 @@ const ProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
 								select
 								label="Gender"
 								fullWidth size="small"
+								value={selectedGender?.name ?? ""}
 								onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-									const selectedOption = genderOptions.find(option => option.name === event.target.value);
-									handleTextFieldInput("gender_id", selectedOption?.ID ?? 0)
-
+									const selectedOption = genderOptions.find(option => option.name === event.target.value) || null;
+									setSelectedGender(selectedOption)
 								}}
-								helperText={
-									<Box display="flex" justifyContent="end">
-										<Button size='small' variant="text" color="primary"
-											onClick={() => {
-												setOpen(true);
-												setOpenTitle("Add Gender")
-												setOpenLabel("Gender")
-												setOpenKey("gender")
-											}}
-										>
-											Add Gender
-										</Button>
-									</Box>
-								}
+
 							>
 								{genderOptions.map((option) => (
 									<MenuItem key={option.name} value={option.name}>
@@ -493,29 +638,16 @@ const ProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
 								select
 								label="Size Variant"
 								fullWidth size="small"
+								value={selectedSizeVariant}
 								onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-									const selectedOption = sizeVariantOptions.find(option => option.name === event.target.value);
-									handleTextFieldInput("size_variant_id", selectedOption?.ID ?? 0)
-
+									const selectedOption = sizeVariantOptions.find(option => option === event.target.value) || "";
+									setSelectedSizeVariant(selectedOption)
 								}}
-								helperText={
-									<Box display="flex" justifyContent="end">
-										<Button size='small' variant="text" color="primary"
-											onClick={() => {
-												setOpen(true);
-												setOpenTitle("Add Size Variant")
-												setOpenLabel("Size Variant")
-												setOpenKey("size_ariant")
-											}}
-										>
-											Add Size Variant
-										</Button>
-									</Box>
-								}
+
 							>
 								{sizeVariantOptions.map((option) => (
-									<MenuItem key={option.name} value={option.name}>
-										{option.name}
+									<MenuItem key={option} value={option}>
+										{option}
 									</MenuItem>
 								))}
 							</TextField>
@@ -526,10 +658,10 @@ const ProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
 								select
 								label="Source"
 								fullWidth size="small"
+								value={selectedSource?.name ?? ""}
 								onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-									const selectedOption = sourceOptions.find(option => option.name === event.target.value);
-									handleTextFieldInput("source_id", selectedOption?.ID ?? 0)
-
+									const selectedOption = sourceOptions.find(option => option.name === event.target.value) || null;
+									setSelectedSource(selectedOption)
 								}}
 								helperText={
 									<Box display="flex" justifyContent="end">
@@ -545,6 +677,7 @@ const ProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
 										</Button>
 									</Box>
 								}
+
 							>
 								{sourceOptions.map((option) => (
 									<MenuItem key={option.name} value={option.name}>
@@ -553,10 +686,29 @@ const ProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
 								))}
 							</TextField>
 						</Grid>
+						<Grid size={12}>
+							<TextField
+								id="desc"
+								minRows={4}
+								maxRows={6}
+								multiline
+								label="Description"
+								fullWidth size="small"
+
+								value={desc}
+								onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+									setDesc(event.target.value)
+								}}
+
+
+							>
+
+							</TextField>
+						</Grid>
 					</Grid>
 					<Box display="flex" justifyContent="end">
 						<Button sx={{ mt: 4, mb: 2, ml: 2 }} variant="contained" color="error" onClick={onSuccess}>Cancel</Button>
-						<Button sx={{ mt: 4, mb: 2, ml: 2 }} variant="contained" onClick={handleSubmit}>Save</Button>
+						{<Button sx={{ mt: 4, mb: 2, ml: 2 }} variant="contained" disabled={imageUploading} onClick={handleSubmit}>Save</Button>}
 					</Box>
 				</Box>
 			</form >
@@ -577,7 +729,7 @@ const ProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
 						fullWidth
 						variant="outlined"
 						onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-							let p: ProductProperty = new ProductProperty(0, event.target.value)
+							let p: ProductAttributeProperty = new ProductAttributeProperty(0, event.target.value)
 							setOpenValue(p)
 						}}
 					/>

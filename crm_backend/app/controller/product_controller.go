@@ -131,18 +131,6 @@ func (ctrl *ProductCtrl) GetAllProductsV2(c *gin.Context) {
 		}
 	}
 
-	sizeVariantParam := c.Query("sizeVariant") // Comma-separated sizeVariant IDs
-	var sizeVariantIDs []int
-	if sizeVariantParam != "" {
-		sizeVariantStrs := strings.Split(sizeVariantParam, ",")
-		for _, catStr := range sizeVariantStrs {
-			catID, err := strconv.Atoi(catStr)
-			if err == nil {
-				sizeVariantIDs = append(sizeVariantIDs, catID)
-			}
-		}
-	}
-
 	sourceParam := c.Query("source") // Comma-separated source IDs
 	var sourceIDs []int
 	if sourceParam != "" {
@@ -155,11 +143,14 @@ func (ctrl *ProductCtrl) GetAllProductsV2(c *gin.Context) {
 		}
 	}
 
+	sizeVariant := c.Query("size_variant") // Comma-separated sizeVariant IDs
+
 	products, err := ctrl.productService.GetFilteredProducts(
 		page, pageSize,
 		sortBy, sortOrder, name, status,
 		mrpMin, mrpMax,
-		categoryIDs, fitIDs, variantIDs, colorIDs, fabricIDs, sleeveIDs, genderIDs, sizeVariantIDs, sourceIDs,
+		categoryIDs, fitIDs, variantIDs, colorIDs, fabricIDs, sleeveIDs, genderIDs, sourceIDs,
+		sizeVariant,
 	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -169,10 +160,10 @@ func (ctrl *ProductCtrl) GetAllProductsV2(c *gin.Context) {
 	c.JSON(http.StatusOK, products)
 }
 
-func (ctrl *ProductCtrl) GetProductProperties(c *gin.Context) {
-	property := c.Query("property")
+func (ctrl *ProductCtrl) GetProductAttributes(c *gin.Context) {
+	attribute := c.Query("attribute")
 
-	products, err := ctrl.productService.GetProductProperties(property)
+	products, lists, err := ctrl.productService.GetProductAttributes(attribute)
 	if err != nil {
 		if errors.Is(err, crmErrors.ERR_INAVLID_PRODUCT_PROPERTY) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "No such Property"})
@@ -182,7 +173,7 @@ func (ctrl *ProductCtrl) GetProductProperties(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"properties": products})
+	c.JSON(http.StatusOK, gin.H{"properties": products, "lists": lists})
 }
 
 func (ctrl *ProductCtrl) GetProductFilters(c *gin.Context) {
@@ -193,6 +184,18 @@ func (ctrl *ProductCtrl) GetProductFilters(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"filters": filters})
+}
+
+func (ctrl *ProductCtrl) GetProductSizeVariants(c *gin.Context) {
+	size_variant_name := c.Param("variant")
+
+	sizeVariants, err := ctrl.productService.GetProductSizeVariants(size_variant_name)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, sizeVariants)
 }
 
 func (ctrl *ProductCtrl) AddProduct(c *gin.Context) {
