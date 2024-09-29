@@ -1,0 +1,79 @@
+version: '3.8'
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql_container
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: mydb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    volumes:
+      - ./dbdata:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  seaweed_master:
+    image: chrislusf/seaweedfs:latest
+    container_name: seaweed_master
+    command: 'master'
+    ports:
+      - "9333:9333"
+    volumes:
+      - ./seaweedfs/data:/data
+
+  seaweed_volume:
+    image: chrislusf/seaweedfs:latest
+    container_name: seaweed_volume
+    command: 'volume -mserver="seaweed_master:9333" -dir="/data" -port=7000'
+    depends_on:
+      - seaweed_master
+    ports:
+      - "7000:7000"
+    volumes:
+      - ./seaweedfs/data:/data
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx_proxy
+    volumes:
+      - ./crm_backend/nginx/nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "8081:8081"
+    depends_on:
+      - seaweed_master
+
+  backend:
+    build: ./crm_backend
+    container_name: golang_backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_HOST: mysql_container
+      DB_USER: user
+      DB_PASSWORD: password
+      DB_NAME: mydb
+      DB_PORT: 3306
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/api/crm/v1/healthz" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  ui:
+    build: ./material-ui-cra-ts
+    container_name: react_ui
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy

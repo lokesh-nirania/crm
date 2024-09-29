@@ -1,21 +1,39 @@
 {
 	"default_users": [
 		{
-			"email": "admin@example.com",
-			"username": "admin",
+			"email": "stylox@admin.com",
+			"username": "stylox",
 			"role": "admin",
 			"active": true,
 			"password": "$2b$12$VMo8vz.fk9hvYgvjx1cpf.PZHpLTcm4ajTsiaHyQSVjmZQ2K5LJxi"
 		},
 		{
-			"email": "employee1@example.com",
-			"username": "employee1",
-			"role": "employee"
+			"email": "himanshu@admin.com",
+			"username": "himanshu",
+			"role": "admin",
+			"active": true,
+			"password": "$2b$12$VMo8vz.fk9hvYgvjx1cpf.PZHpLTcm4ajTsiaHyQSVjmZQ2K5LJxi"
 		},
 		{
-			"email": "client1@example.com",
-			"username": "client1",
-			"role": "client"
+			"email": "lokesh@client.com",
+			"username": "lokesh",
+			"role": "client",
+			"active": true,
+			"password": "$2b$12$Au49rq3lbreiB5r.xFntsOonmManYN4kuXC.iLu8WqDBl05.33VdO"
+		},
+		{
+			"email": "rakesh@client.com",
+			"username": "rakesh",
+			"role": "client",
+			"active": true,
+			"password": "$2b$12$Au49rq3lbreiB5r.xFntsOonmManYN4kuXC.iLu8WqDBl05.33VdO"
+		},
+		{
+			"email": "suresh@client.com",
+			"username": "suresh",
+			"role": "client",
+			"active": true,
+			"password": "$2b$12$Au49rq3lbreiB5r.xFntsOonmManYN4kuXC.iLu8WqDBl05.33VdO"
 		}
 	]
 }

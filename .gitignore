@@ -2,3 +2,6 @@ crm_backend/dbdata/
 crm_backend/seaweedfs/
 crm_backend/build/
 .vscode/
+seaweedfs/
+dbdata/
+crm_backend/__debug*
