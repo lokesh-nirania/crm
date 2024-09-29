@@ -160,6 +160,18 @@ func (ctrl *ProductCtrl) GetAllProductsV2(c *gin.Context) {
 	c.JSON(http.StatusOK, products)
 }
 
+func (ctrl *ProductCtrl) GetProductWithSizeVariants(c *gin.Context) {
+	productId, _ := strconv.Atoi(c.Param("product_id"))
+
+	product, err := ctrl.productService.GetProductWithSizeVariants(productId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"product": product})
+}
+
 func (ctrl *ProductCtrl) GetProductAttributes(c *gin.Context) {
 	attribute := c.Query("attribute")
 

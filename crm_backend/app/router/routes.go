@@ -26,16 +26,19 @@ func InitializeRoutes(router *gin.Engine) {
 	authRepo := repository.NewAuthRepository(config.DB)
 	productRepo := repository.NewProductRepository(config.DB)
 	grnRepo := repository.NewGRNRepository(config.DB)
+	orderRepo := repository.NewOrderRepository(config.DB)
 
 	// service initialisation
 	authService := service.NewAuthService(authRepo, jwtSecret)
 	productService := service.NewProductService(productRepo)
 	grnService := service.NewGRNService(grnRepo)
+	orderService := service.NewOrderService(orderRepo)
 
 	// controller initialisation
 	authController := controller.NewAuthController(authService)
 	productController := controller.NewProductCtrl(productService)
 	grnController := controller.NewGRNCtrl(grnService)
+	orderController := controller.NewOrderCtrl(orderService)
 
 	// Auth routes
 	auth := router.Group("/api/crm/v1/auth")
@@ -69,6 +72,7 @@ func InitializeRoutes(router *gin.Engine) {
 	{
 		// products.GET("", productController.GetAllProducts)
 		products.GET("/v2", productController.GetAllProductsV2)
+		products.GET("/:product_id", productController.GetProductWithSizeVariants)
 		products.GET("/attributes", productController.GetProductAttributes)
 		products.GET("/filters", productController.GetProductFilters)
 		products.GET("/size_variants/:variant", productController.GetProductSizeVariants)
@@ -98,5 +102,12 @@ func InitializeRoutes(router *gin.Engine) {
 
 		grn.GET("/sources", grnController.GetGRNSources)
 
+	}
+
+	orders := router.Group("/api/crm/v1/orders")
+	orders.Use(middleware.JWTAuthMiddleware(jwtSecret)) // Apply the JWT middleware
+	{
+		orders.GET("", nil)
+		orders.POST("/place", orderController.PlaceOrder)
 	}
 }

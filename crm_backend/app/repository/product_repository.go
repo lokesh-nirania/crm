@@ -18,6 +18,8 @@ type ProductRepo interface {
 		categoryID, fitID, variantID, colorID, fabricID, sleeveID, genderID, sourceID []int,
 		sizeVariant string,
 	) (*[]model.Product, int64, error)
+	GetProduct(productID int) (*model.Product, error)
+	GetProductInventory(productID int) (*[]model.Inventory, error)
 
 	GetProductProperties(property string) (map[string]interface{}, error)
 	GetProductFilters(filters []dto.ProductFilter) ([]dto.ProductFilter, error)
@@ -125,6 +127,41 @@ func (p *productRepository) GetFilteredProducts(
 	}
 
 	return &products, totalItems, nil
+}
+
+func (p *productRepository) GetProduct(productID int) (*model.Product, error) {
+	var product model.Product
+
+	if err := p.db.
+		Model(&model.Product{}).
+		Where("id = ?", productID).
+		Preload("Category").
+		Preload("Fit").
+		Preload("Variant").
+		Preload("Color").
+		Preload("Fabric").
+		Preload("Sleeve").
+		Preload("Gender").
+		Preload("Source").
+		Find(&product).Error; err != nil {
+		return nil, err
+	}
+
+	return &product, nil
+}
+
+func (p *productRepository) GetProductInventory(productID int) (*[]model.Inventory, error) {
+	var grnProduct []model.Inventory
+
+	if err := p.db.
+		Model(&model.Inventory{}).
+		Preload("SizeVariant").
+		Where("product_id = ?", productID).
+		Find(&grnProduct).Error; err != nil {
+		return nil, err
+	}
+
+	return &grnProduct, nil
 }
 
 func (p *productRepository) GetProductSizeVariants(variantName string) (*[]model.SizeVariant, error) {

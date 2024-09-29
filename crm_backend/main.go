@@ -40,6 +40,8 @@ func main() {
 		&model.GRNProduct{},
 		&model.Vendor{},
 		&model.Warehouse{},
+		&model.Order{},
+		&model.OrderProduct{},
 	)
 
 	appConfig := config.ReadConfig()

@@ -10,6 +10,8 @@ import { AuthProvider } from './providers/AuthContext'; // Import the AuthProvid
 import Home from './pages/Home';
 import GRNs from './pages/GRNs';
 import Shop from './pages/Shop';
+import ProductDetailedPage from './pages/ProductDetailedPage';
+import CartPage from './pages/Cart';
 
 // Create other page components like GRN, Orders
 
@@ -33,6 +35,8 @@ const App: React.FC = () => {
               <Route path="grns" element={<GRNs />} />
               <Route path="profile" element={<Profile />} />
               <Route path="shop" element={<Shop />} />
+              <Route path="/cart" element={<CartPage />} />
+              <Route path="/product-detail/:index" element={<ProductDetailedPage />} />
               {/* Add other routes */}
             </Route>
           </Routes>

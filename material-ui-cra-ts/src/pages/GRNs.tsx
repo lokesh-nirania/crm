@@ -7,6 +7,7 @@ import GRN, { ConfirmGRNRequest } from '../model/grns';
 import GRNForm from '../components/grn/GRNForm';
 import { Edit, Visibility } from '@mui/icons-material';
 import { enqueueSnackbar } from 'notistack';
+import GRNCard from '../components/grn/GRNCard';
 
 const GRNs: React.FC = () => {
 
@@ -159,25 +160,27 @@ const GRNTable: React.FC<GRNTableProps> = ({ filters }) => {
 		pageSize: 10,
 	});
 	const [rows, setRows] = useState<GridRowsProp>([]);
+	const [grns, setGRNS] = useState<GRN[]>([]);
+	const [selectedGrn, setSelectedGRN] = useState<GRN | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [rowSelectionModel, setRowSelectionModel] = React.useState<GridRowSelectionModel>([]);
 	const [rowCount, setRowCount] = useState(0);
 
-	const handleGRNViewButton = async (grn_id: number) => {
+	const [openViewGRNDialog, setOpenViewGRNDialog] = useState(false);
 
+	const handleGRNViewButton = async (index: number) => {
+		setSelectedGRN(grns[index])
+		setOpenViewGRNDialog(true);
 	}
 
-	const handleGRNEditButton = async (grn_id: number) => {
-
-	}
-
-	const confirmGRNButton = async (grn_id: number) => {
+	const confirmGRNButton = async (grn_id: number, index: number) => {
 		try {
 			const confirmGrnRequest: ConfirmGRNRequest = {
 				grn_id: grn_id,
 			}
 			const confirmedGRN = await confirmGRNData(confirmGrnRequest)
 			const updatedRow: {
+				index: number,
 				id: number,
 				source: string,
 				status: string,
@@ -192,6 +195,7 @@ const GRNTable: React.FC<GRNTableProps> = ({ filters }) => {
 				confirmed_by: string,
 				actions: JSX.Element,
 			} = {
+				index: index,
 				id: confirmedGRN.grn.id,
 				source: confirmedGRN.grn.source,
 				status: confirmedGRN.grn.status,
@@ -214,6 +218,12 @@ const GRNTable: React.FC<GRNTableProps> = ({ filters }) => {
 				)
 			);
 
+			setGRNS((prevRows) =>
+				prevRows.map((grn) =>
+					grn.id === grn_id ? confirmedGRN.grn : grn // Replace the row with the updated row data
+				)
+			);
+
 			enqueueSnackbar("GRN Confirmed Succcessfully", { variant: 'success' }); // Show error notification
 
 			console.log("need to confrom grin i ", grn_id, JSON.stringify(confirmedGRN))
@@ -223,11 +233,13 @@ const GRNTable: React.FC<GRNTableProps> = ({ filters }) => {
 	}
 
 	// Simulated API call to fetch data
-	const fetchProducts = async (page: number, pageSize: number) => {
+	const fetchGRNs = async (page: number, pageSize: number) => {
 		setLoading(true);
 		try {
 			const f = await getAllFilteredGRNs(filters, page, pageSize);
+			setGRNS(f.grns);
 			let a: Array<{
+				index: number,
 				id: number,
 				source: string,
 				status: string,
@@ -246,8 +258,9 @@ const GRNTable: React.FC<GRNTableProps> = ({ filters }) => {
 			console.log("----> ", f.grns);
 
 			// Iterate over fetched products and populate the 'a' array
-			f.grns.forEach((element: GRN) => {
+			f.grns.forEach((element: GRN, index: number) => {
 				a.push({
+					index: index,
 					id: element.id,
 					source: element.source,
 					status: element.status,
@@ -277,7 +290,7 @@ const GRNTable: React.FC<GRNTableProps> = ({ filters }) => {
 	// Fetch data when page or page size changes
 	useEffect(() => {
 		console.log("filters are changed");
-		fetchProducts(paginationModel.page + 1, paginationModel.pageSize);
+		fetchGRNs(paginationModel.page + 1, paginationModel.pageSize);
 	}, [paginationModel.page, paginationModel.pageSize, filters]);
 
 	return (
@@ -320,10 +333,10 @@ const GRNTable: React.FC<GRNTableProps> = ({ filters }) => {
 						field: 'actions', headerName: "Actions", flex: 2,
 						renderCell: (params) => (
 							<div>
-								<IconButton aria-label="view" onClick={() => handleGRNViewButton(params.row.id)}>
+								<IconButton aria-label="view" onClick={() => handleGRNViewButton(params.row.index)}>
 									<Visibility />
 								</IconButton>
-								{params.row.status === "Pending" && <Button variant="contained" onClick={() => { confirmGRNButton(params.row.id) }}>Confirm</Button>}
+								{params.row.status === "Pending" && <Button variant="contained" onClick={() => { confirmGRNButton(params.row.id, params.row.index) }}>Confirm</Button>}
 								{params.row.status === "Confirmed" && <Button variant="contained" disabled>Confirmed</Button>}
 							</div>
 						),
@@ -331,6 +344,12 @@ const GRNTable: React.FC<GRNTableProps> = ({ filters }) => {
 				]}
 
 			/>
+			<Dialog open={openViewGRNDialog} onClose={() => { setOpenViewGRNDialog(false) }} fullWidth>
+				<DialogTitle>View GRN</DialogTitle>
+				<DialogContent>
+					<GRNCard grn={selectedGrn} />
+				</DialogContent>
+			</Dialog >
 		</div>
 	);
 };

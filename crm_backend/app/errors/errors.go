@@ -15,6 +15,7 @@ var ERR_TOKEN_GENERATION_FAILED *CustomError = &CustomError{Err: "ERR_TOKEN_GENE
 var ERR_USER_INACTIVE *CustomError = &CustomError{Err: "ERR_USER_INACTIVE"}
 
 var ERR_INAVLID_PRODUCT_PROPERTY *CustomError = &CustomError{Err: "ERR_INAVLID_PRODUCT_PROPERTY"}
+var ERR_STOCK_NOT_AVAILABLE *CustomError = &CustomError{Err: "ERR_STOCK_NOT_AVAILABLE"}
 
 var ERR_INAVLID_GRN_WAREHOUSE *CustomError = &CustomError{Err: "ERR_INAVLID_GRN_WAREHOUSE"}
 var ERR_INAVLID_GRN_VENDOR *CustomError = &CustomError{Err: "ERR_INAVLID_GRN_VENDOR"}

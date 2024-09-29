@@ -20,7 +20,7 @@ const ProductShopCard: React.FC<{ product: Product, index: number, onClick: (id:
     return (
         <Card sx={{ maxWidth: 300, minWidth: 200 }}>
             {/* Image */}
-            <CardActionArea onClick={() => { onClick(index) }}>
+            <CardActionArea onClick={() => { onClick(product.ID) }}>
                 <CardMedia
                     component="img"
                     height="200"

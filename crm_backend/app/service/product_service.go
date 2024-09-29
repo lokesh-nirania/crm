@@ -18,6 +18,7 @@ type ProductService interface {
 		categoryID, fitID, variantID, colorID, fabricID, sleeveID, genderID, sourceID []int,
 		sizeVariant string,
 	) (*dto.ProductsPaginatedResponse, error)
+	GetProductWithSizeVariants(productID int) (*dto.SingleProductWithSizeVariants, error)
 	GetProductAttributes(attribute string) (interface{}, interface{}, error)
 	GetProductFilters() ([]dto.ProductFilter, error)
 	GetProductSizeVariants(varaintName string) (*dto.ProductSizeVariantsResponse, error)
@@ -69,6 +70,60 @@ func (p *productService) GetFilteredProducts(
 	}
 
 	return resp, nil
+}
+
+func (p *productService) GetProductWithSizeVariants(productID int) (*dto.SingleProductWithSizeVariants, error) {
+	product, err := p.productRepo.GetProduct(productID)
+	if err != nil {
+		return nil, err
+	}
+
+	inventory, err := p.productRepo.GetProductInventory(productID)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(*inventory) == 0 {
+		return nil, crmErrors.ERR_STOCK_NOT_AVAILABLE
+	}
+
+	i := &dto.SingleProductWithSizeVariants{
+		Product:        *product,
+		AvailableSizes: []dto.SpefificSizeVariant{},
+	}
+
+	availableSizes := []dto.SpefificSizeVariant{}
+
+	for _, ii := range *inventory {
+		a := dto.SpefificSizeVariant{
+			ID:       int(ii.SizeVariantID),
+			Variant:  string(ii.SizeVariant.Variant),
+			Name:     ii.SizeVariant.Name,
+			Quantity: ii.Quantity,
+		}
+
+		availableSizes = append(availableSizes, a)
+	}
+
+	availableSets := [][]int{}
+	for a := 0; a < len(availableSizes)-2; a++ {
+		triplet := []dto.SpefificSizeVariant{availableSizes[a], availableSizes[a+1], availableSizes[a+2]}
+		shouldInsert := true
+		for _, t := range triplet {
+			if t.Quantity <= 0 {
+				shouldInsert = false
+			}
+		}
+		if shouldInsert {
+			availableSets = append(availableSets, []int{a, a + 1, a + 2})
+		}
+
+	}
+
+	i.AvailableSizes = availableSizes
+	i.AvailableSets = availableSets
+
+	return i, nil
 }
 
 func (p *productService) GetProductSizeVariants(varaintName string) (*dto.ProductSizeVariantsResponse, error) {

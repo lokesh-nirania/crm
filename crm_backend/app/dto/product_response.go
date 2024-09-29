@@ -28,6 +28,12 @@ type SingleProduct struct {
 	SizeVariant string  `json:"size_variant"`
 }
 
+type SingleProductWithSizeVariants struct {
+	model.Product
+	AvailableSizes []SpefificSizeVariant `json:"available_sizes"`
+	AvailableSets  [][]int               `json:"available_sets"`
+}
+
 type ProductFilter struct {
 	Name     string      `json:"name"`
 	Type     string      `json:"type"`
@@ -43,5 +49,13 @@ type SizeVariant struct {
 	ID        int        `json:"id"`
 	Variant   string     `json:"variant"`
 	Name      string     `json:"name"`
+	CreatedBy model.User `json:"created_by"`
+}
+
+type SpefificSizeVariant struct {
+	ID        int        `json:"id"`
+	Variant   string     `json:"variant"`
+	Name      string     `json:"name"`
+	Quantity  int        `json:"quantity"`
 	CreatedBy model.User `json:"created_by"`
 }

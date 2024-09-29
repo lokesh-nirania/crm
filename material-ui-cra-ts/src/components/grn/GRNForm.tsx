@@ -275,23 +275,25 @@ const GRNForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
 									</Grid>
 
 									{sizeVariants[pi].map((sv, si) => {
-										return <Grid size={3}>
-											<TextField
-												id="size_variant"
-												label={sv.variant === "Free" ? "Quantity" : sv.name}
-												type="number"
-												slotProps={{
-													input: {
-														readOnly: true, // Recommended way
-													},
-												}}
-												fullWidth
-												value={sv.quantity}
-											>
+										if (sv.quantity > 0) {
+											return <Grid size={3}>
+												<TextField
+													id="size_variant"
+													label={sv.variant === "Free" ? "Quantity" : sv.name}
+													type="number"
+													slotProps={{
+														input: {
+															readOnly: true, // Recommended way
+														},
+													}}
+													fullWidth
+													value={sv.quantity}
+												>
 
-											</TextField>
+												</TextField>
 
-										</Grid>
+											</Grid>
+										}
 									})}
 								</Grid>
 								<Box display="flex" justifyContent="end">

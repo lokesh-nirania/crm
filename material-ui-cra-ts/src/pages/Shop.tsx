@@ -6,6 +6,7 @@ import { enqueueSnackbar } from 'notistack';
 import { ExpandMore } from '@mui/icons-material';
 import ProductShopCard from '../components/product/ProductShopCard';
 import ProductInfoCard from '../components/product/ProductCard';
+import { useNavigate } from 'react-router-dom';
 
 const Shop: React.FC = () => {
     const [products, setProducts] = useState<Product[]>([]);
@@ -17,6 +18,7 @@ const Shop: React.FC = () => {
     const [totalPages, setTotalPages] = useState(0);
 
     const [openInfoCard, setOpenInfoCard] = useState(false);
+    const navigate = useNavigate();
 
     const fetchProductFilters = async () => {
         try {
@@ -78,7 +80,8 @@ const Shop: React.FC = () => {
 
     const handleCardClick = async (index: number) => {
         setSelectedProdcut(products[index]);
-        setOpenInfoCard(true);
+        // setOpenInfoCard(true);
+        navigate("/product-detail/" + index);
     }
 
     useEffect(() => {

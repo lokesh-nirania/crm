@@ -42,6 +42,10 @@ export interface FilteredProductsResponse {
 	products: Array<Product>,
 }
 
+export interface ProductWithInventoryResponse {
+	product: ProductWithInventory,
+}
+
 export interface FiltersResponse {
 	filters: Array<FilterResponse>
 }
@@ -141,6 +145,11 @@ export default class Product {
 		this.createdBy = createdBy;
 		this.lastModifiedBy = lastModifiedBy;
 	}
+}
+
+export class ProductWithInventory extends Product {
+	available_sizes: SpecificSizeVariant[] = [];
+	available_sets: number[][] = [];
 }
 
 export class ProductAttributeProperty {
