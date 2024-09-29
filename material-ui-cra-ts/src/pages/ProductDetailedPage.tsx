@@ -7,11 +7,14 @@ import { CircularProgress, Box, Grid2 as Grid, Typography, TableContainer, Paper
 import { Add, Remove } from "@mui/icons-material";
 import { CartItem, SetForCat } from "../model/order";
 import Cart from "./Cart";
+import { useAuth } from "../providers/AuthContext";
 
 
 
 const ProductDetailedPage: React.FC = () => {
     const { index } = useParams();
+
+    const { user } = useAuth();
 
     const [product, setProduct] = useState<ProductWithInventory | null>(null);
     const fetchProduct = async (id: number) => {
@@ -42,7 +45,7 @@ const ProductInfoCard: React.FC<{ product: ProductWithInventory }> = ({ product 
     // const [maxCountForCart, setMaxCountForCart] = useState<number[]>(Array(product.available_sets.length).fill(9999))
     const [isCardEnable, setCartEnable] = useState(false);
 
-
+    const { user } = useAuth();
 
     let q = 0;
     product.available_sizes.forEach(element => {
@@ -158,7 +161,7 @@ const ProductInfoCard: React.FC<{ product: ProductWithInventory }> = ({ product 
                                             <TableCell>Sleeve</TableCell>
                                             <TableCell>{product.sleeve.name}</TableCell>
                                         </TableRow>
-                                        {product.size_variant !== "Free" && <TableRow>
+                                        {user?.UserType !== "admin" && product.size_variant !== "Free" && <TableRow>
                                             <TableCell>Available Sizes</TableCell>
                                             <TableCell>
                                                 {product.available_sizes.length > 0 ? (
@@ -185,6 +188,81 @@ const ProductInfoCard: React.FC<{ product: ProductWithInventory }> = ({ product 
                                                                 >
                                                                     {size.name}
                                                                 </Button>
+                                                            ))}
+                                                        </Box>
+                                                    ))
+                                                ) : (
+                                                    <Box>No sizes available</Box>
+                                                )}
+                                            </TableCell>
+                                        </TableRow>}
+                                        {user?.UserType === "admin" && product.size_variant !== "Free" && <TableRow>
+                                            <TableCell>Available Sizes</TableCell>
+                                            <TableCell>
+                                                {product.available_sizes.length > 0 ? (
+                                                    product.available_sizes.reduce((acc: any[][], size, index) => {
+                                                        const chunkIndex = Math.floor(index / 6);
+                                                        if (!acc[chunkIndex]) {
+                                                            acc[chunkIndex] = []; // start a new row
+                                                        }
+                                                        acc[chunkIndex].push(size);
+                                                        return acc;
+                                                    }, []).map((chunk, rowIndex) => (
+                                                        <Box minWidth={200} key={rowIndex}  >
+                                                            {chunk.map((size) => (
+                                                                <Box
+                                                                    sx={{
+                                                                        display: 'inline-block',  // To make the box inline like a pill
+                                                                        px: 1,  // Horizontal padding for pill-like appearance
+                                                                        py: 1,  // Vertical padding for height
+                                                                        borderRadius: 5,  // High border-radius for pill shape
+                                                                        bgcolor: '#1976d2',  // A blue background (Material UI primary color)
+                                                                        color: 'white',  // White text for good contrast
+                                                                        boxShadow: '0 3px 6px rgba(0,0,0,0.1)',  // A subtle shadow for depth
+                                                                        border: 'none',  // No border to keep it clean
+                                                                        mb: 1,
+                                                                        mr: 1
+                                                                    }}
+                                                                >
+                                                                    <Button
+                                                                        key={size.name}
+                                                                        variant="outlined"
+                                                                        sx={{
+                                                                            mr: 1,
+                                                                            borderRadius: "50%",
+                                                                            width: 40,
+                                                                            height: 40,
+                                                                            minWidth: 40,
+                                                                            borderColor: "#1976d2", // A nice blue border for contrast
+                                                                            color: "#1976d2", // Matching text color
+                                                                            bgcolor: "white", // Light background for contrast with border
+                                                                            '&:hover': {
+                                                                                bgcolor: '#e3f2fd',  // A light blue background on hover
+                                                                            },
+                                                                        }}
+                                                                    >
+                                                                        {size.name}
+                                                                    </Button>
+                                                                    <Button
+                                                                        key={size.name}
+                                                                        variant="outlined"
+                                                                        sx={{
+                                                                            mr: 1,
+                                                                            borderRadius: "50%",
+                                                                            width: 40,
+                                                                            height: 40,
+                                                                            minWidth: 40,
+                                                                            borderColor: "#1976d2", // A nice blue border for contrast
+                                                                            color: "#1976d2", // Matching text color
+                                                                            bgcolor: "white", // Light background for contrast with border
+                                                                            '&:hover': {
+                                                                                bgcolor: '#e3f2fd',  // A light blue background on hover
+                                                                            },
+                                                                        }}
+                                                                    >
+                                                                        {size.quantity}
+                                                                    </Button>
+                                                                </Box>
                                                             ))}
                                                         </Box>
                                                     ))
@@ -243,7 +321,7 @@ const ProductInfoCard: React.FC<{ product: ProductWithInventory }> = ({ product 
                                                                         </Button>
                                                                     })}
                                                                 </Box>
-                                                                <Box sx={{
+                                                                {user?.UserType !== "admin" && <Box sx={{
                                                                     ml: 2,
 
                                                                     px: 1,  // Horizontal padding for pill-like appearance
@@ -270,11 +348,11 @@ const ProductInfoCard: React.FC<{ product: ProductWithInventory }> = ({ product 
                                                                     >
                                                                         <Add />
                                                                     </IconButton>
-                                                                </Box>
+                                                                </Box>}
                                                             </Box>
                                                         )
                                                     })}
-                                                    <Button
+                                                    {user?.UserType !== "admin" && <Button
                                                         variant="outlined"
                                                         disabled={!isCardEnable}
                                                         sx={{
@@ -315,7 +393,7 @@ const ProductInfoCard: React.FC<{ product: ProductWithInventory }> = ({ product 
                                                         }}
                                                     >
                                                         Add to Cart
-                                                    </Button>
+                                                    </Button>}
                                                 </TableCell>
                                             </TableRow>
                                         }
@@ -331,119 +409,5 @@ const ProductInfoCard: React.FC<{ product: ProductWithInventory }> = ({ product 
         </Grid>
     )
 
-    // return (
-    //     <Box sx={{ p: 3, }}>
-    //         <Grid container spacing={2} >
-    //             {/* Left side - Product Image */}
-    //             <Grid size={5}>
-    //                 <Box sx={{ textAlign: "center", maxWidth: 450 }}>
-    //                     <img src={imageSrc} alt={product.name} style={{ width: "100%" }} onError={handleImageError} />
-    //                 </Box>
-    //             </Grid>
 
-    //             {/* Right side - Product Details */}
-    //             <Grid size={7}>
-    //                 <Typography variant="h4" component="h1" gutterBottom>
-    //                     {product.name}
-    //                 </Typography>
-    //                 <Card sx={{ maxWidth: 450 }}>
-    //                     <TableContainer >
-    //                         <Table>
-    //                             <TableBody>
-    //                                 <TableRow>
-    //                                     <TableCell>SKU</TableCell>
-    //                                     <TableCell>{product.sku}</TableCell>
-    //                                 </TableRow>
-    //                                 <TableRow>
-    //                                     <TableCell>Price</TableCell>
-    //                                     <TableCell>
-    //                                         <Typography variant="h6" component="span" color="primary">
-    //                                             ₹{product.sell_price}
-    //                                         </Typography>
-    //                                         {product.mrp > product.sell_price && (
-    //                                             <Typography
-    //                                                 variant="body2"
-    //                                                 component="span"
-    //                                                 color="text.secondary"
-    //                                                 sx={{ textDecoration: 'line-through', ml: 1 }}
-    //                                             >
-    //                                                 ₹{product.mrp}
-    //                                             </Typography>
-    //                                         )}
-    //                                     </TableCell>
-    //                                 </TableRow>
-    //                                 <TableRow>
-    //                                     <TableCell>Category</TableCell>
-    //                                     <TableCell>{product.category.name}</TableCell>
-    //                                 </TableRow>
-    //                                 <TableRow>
-    //                                     <TableCell>Fit</TableCell>
-    //                                     <TableCell>{product.fit.name}</TableCell>
-    //                                 </TableRow>
-    //                                 <TableRow>
-    //                                     <TableCell>Color</TableCell>
-    //                                     <TableCell>{product.color.name}</TableCell>
-    //                                 </TableRow>
-    //                                 <TableRow>
-    //                                     <TableCell>Fabric</TableCell>
-    //                                     <TableCell>{product.fabric.name}</TableCell>
-    //                                 </TableRow>
-    //                                 <TableRow>
-    //                                     <TableCell>Sleeve</TableCell>
-    //                                     <TableCell>{product.sleeve.name}</TableCell>
-    //                                 </TableRow>
-    //                                 <TableRow>
-    //                                     <TableCell>Available Sizes</TableCell>
-    //                                     <TableCell>
-    //                                         {product.available_sizes.length > 0 ? (
-    //                                             product.available_sizes.reduce((acc: any[][], size, index) => {
-    //                                                 const chunkIndex = Math.floor(index / 5);
-    //                                                 if (!acc[chunkIndex]) {
-    //                                                     acc[chunkIndex] = []; // start a new row
-    //                                                 }
-    //                                                 acc[chunkIndex].push(size);
-    //                                                 return acc;
-    //                                             }, []).map((chunk, rowIndex) => (
-    //                                                 <Box minWidth={200} key={rowIndex} sx={{ display: "flex", gap: 1, marginBottom: 1 }}>
-    //                                                     {chunk.map((size) => (
-    //                                                         <Button
-    //                                                             key={size.name}
-    //                                                             variant="outlined"
-    //                                                             disabled={size.quantity === 0}
-    //                                                             sx={{
-    //                                                                 borderRadius: "50%",
-    //                                                                 width: 40,
-    //                                                                 height: 40,
-    //                                                                 minWidth: 40,
-    //                                                             }}
-    //                                                         >
-    //                                                             {size.name}
-    //                                                         </Button>
-    //                                                     ))}
-    //                                                 </Box>
-    //                                             ))
-    //                                         ) : (
-    //                                             <Box>No sizes available</Box>
-    //                                         )}
-    //                                     </TableCell>
-    //                                 </TableRow>
-    //                                 <TableRow>
-    //                                     <TableCell>Status</TableCell>
-    //                                     <TableCell>
-    //                                         {product.available_sizes.length > 0 ? (
-    //                                             <Box>In Stock</Box>
-    //                                         ) : (
-    //                                             <Box>Out of Stock</Box>
-    //                                         )}
-    //                                     </TableCell>
-    //                                 </TableRow>
-
-    //                             </TableBody>
-    //                         </Table>
-    //                     </TableContainer>
-    //                 </Card>
-    //             </Grid>
-    //         </Grid>
-    //     </Box>
-    // );
 };

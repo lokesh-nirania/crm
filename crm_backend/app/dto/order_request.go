@@ -1,5 +1,27 @@
 package dto
 
+type AdminConfirmOrderRequest struct {
+	OrderId int `json:"order_id" binding:"required"`
+}
+
+type AdminCancelOrderRequest struct {
+	OrderId int `json:"order_id" binding:"required"`
+}
+
+type AdminOrderRequest struct {
+	Products     []AdminOrderProductRequest `json:"products" binding:"required"`
+	CreatedForID int                        `json:"created_for_id" binding:"required"`
+	TotalPrice   int                        `json:"total_price" binding:"required"`
+}
+
+type AdminOrderProductRequest struct {
+	ID           int              `json:"product_id" binding:"required"`
+	SizeVariants []SetSizeVariant `json:"size_variants" binding:"required"`
+	Price        int              `json:"price" binding:"required"`
+}
+
+///
+
 type OrderRequest struct {
 	Order      []CartItem `json:"order" binding:"required"`
 	TotalPrice int        `json:"total_price" binding:"required"`

@@ -22,3 +22,9 @@ var ERR_INAVLID_GRN_VENDOR *CustomError = &CustomError{Err: "ERR_INAVLID_GRN_VEN
 var ERR_INVALID_GRN *CustomError = &CustomError{Err: "ERR_INVALID_GRN"}
 var ERR_GRN_NO_PRODUCTS *CustomError = &CustomError{Err: "ERR_GRN_NO_PRODUCTS"}
 var ERR_GRN_ALREADY_CONFIRMED *CustomError = &CustomError{Err: "ERR_GRN_ALREADY_CONFIRMED"}
+
+var ERR_INVALID_ORDER *CustomError = &CustomError{Err: "ERR_INVALID_ORDER"}
+var ERR_ORDER_ALREADY_CONFIRMED *CustomError = &CustomError{Err: "ERR_ORDER_ALREADY_CONFIRMED"}
+var ERR_ORDER_ALREADY_CANCELLED *CustomError = &CustomError{Err: "ERR_ORDER_ALREADY_CANCELLED"}
+
+var ERR_GRN_NOT_ENOUGH_INVENTORY *CustomError = &CustomError{Err: "ERR_GRN_NOT_ENOUGH_INVENTORY"}

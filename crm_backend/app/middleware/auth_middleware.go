@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -42,7 +41,6 @@ func JWTAuthMiddleware(jwtSecret []byte) gin.HandlerFunc {
 		// Extract claims (if needed)
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 			// Store the user ID and email in context, so you can access it in the next handlers
-			fmt.Println(claims)
 			if userIDFloat, ok := claims["user_id"].(float64); ok {
 				c.Set("user_id", uint(userIDFloat))
 				c.Set("role", claims["role"])

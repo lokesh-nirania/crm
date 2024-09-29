@@ -7,3 +7,8 @@ export default interface User {
     "UserType": string,
     "Active": boolean
 }
+
+export interface UserResponse {
+    status: string;
+    users: User[];
+}

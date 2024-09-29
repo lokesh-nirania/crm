@@ -31,4 +31,10 @@ export default class api_constants {
     grnSourcesEndpoint = '/api/crm/v1/grn/sources';
 
     placeOrderEndpoint = "/api/crm/v1/orders/place";
+    getOrderEndpoint = "/api/crm/v1/orders";
+
+    getUsersEndpoint = "/api/crm/v1/admin/users"
+    placeOrderAdminEndpoint = "/api/crm/v1/admin/orders/place";
+    confirmOrderAdminEndpoint = "/api/crm/v1/admin/orders/confirm";
+    cancelOrderAdminEndpoint = "/api/crm/v1/admin/orders/cancel";
 }

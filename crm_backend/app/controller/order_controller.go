@@ -57,5 +57,5 @@ func (ctrl *OrderCtrl) GetOrders(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"status": "ok", "orders": orders})
+	c.JSON(http.StatusOK, orders)
 }

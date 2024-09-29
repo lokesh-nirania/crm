@@ -146,8 +146,7 @@ function SideBarMenuItems() {
 			{ text: 'Products', path: '/products', icon: <Inventory /> },
 			{ text: 'GRN', path: '/grns', icon: <Receipt /> },
 			{ text: 'Orders', path: '/orders', icon: <Shop /> },
-			{ text: 'Shop', path: '/shop', icon: <Shop2 /> },
-			{ text: 'Cart', path: '/cart', icon: <Shop /> },
+			{ text: 'Inventory', path: '/shop', icon: <Shop2 /> },
 		];
 	}
 

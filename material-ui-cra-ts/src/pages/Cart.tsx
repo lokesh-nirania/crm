@@ -8,12 +8,15 @@ import { Box, Button, Card, CardContent, CardMedia, Grid2 as Grid, IconButton, T
 import { Remove, Add } from '@mui/icons-material';
 import { CartItem, PlaceOrderRequest, SetForCat } from '../model/order';
 import { postPlaceOrder } from '../api/order_service';
+import { useNavigate } from 'react-router-dom';
 
 const CartPage: React.FC = () => {
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
     const [products, setProducts] = useState<ProductWithInventory[]>([]);
     const [cartPrices, setCartPrices] = useState<number[]>([]);
     const [totalPrice, setTotalPrice] = useState(0);
+
+    const navigate = useNavigate();
 
     const checkLoginStatus = async () => {
         await isLoggedIn();
@@ -68,6 +71,8 @@ const CartPage: React.FC = () => {
                 placeOrderReq.order.push(newCartItem)
             });
             const f = await postPlaceOrder(placeOrderReq);
+            enqueueSnackbar("Order Place Successfully", { variant: 'success' }); // Show error notification in case of any error
+            navigate("/orders")
 
             localStorage.removeItem('cart'); setCartItems([])
         } catch (error: any) {

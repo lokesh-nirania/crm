@@ -27,18 +27,21 @@ func InitializeRoutes(router *gin.Engine) {
 	productRepo := repository.NewProductRepository(config.DB)
 	grnRepo := repository.NewGRNRepository(config.DB)
 	orderRepo := repository.NewOrderRepository(config.DB)
+	adminRepo := repository.NewAdminRepository(config.DB)
 
 	// service initialisation
 	authService := service.NewAuthService(authRepo, jwtSecret)
 	productService := service.NewProductService(productRepo)
 	grnService := service.NewGRNService(grnRepo)
 	orderService := service.NewOrderService(orderRepo)
+	adminService := service.NewAdminService(adminRepo, orderRepo)
 
 	// controller initialisation
 	authController := controller.NewAuthController(authService)
 	productController := controller.NewProductCtrl(productService)
 	grnController := controller.NewGRNCtrl(grnService)
 	orderController := controller.NewOrderCtrl(orderService)
+	adminController := controller.NewAdminController(adminService)
 
 	// Auth routes
 	auth := router.Group("/api/crm/v1/auth")
@@ -58,6 +61,15 @@ func InitializeRoutes(router *gin.Engine) {
 		span.POST("/logout", func(c *gin.Context) {
 			c.JSON(200, map[string]string{"message": "success"})
 		})
+	}
+
+	admin := router.Group("/api/crm/v1/admin")
+	admin.Use(middleware.JWTAuthMiddleware(jwtSecret)) // Apply the JWT middleware
+	{
+		admin.GET("/users", adminController.GetUsers)
+		admin.POST("/orders/place", adminController.PlaceOrder)
+		admin.POST("/orders/confirm/:order_id", adminController.ConfirmOrder)
+		admin.POST("/orders/cancel/:order_id", adminController.CancelOrder)
 	}
 
 	profile := router.Group("/api/crm/v1/profile")

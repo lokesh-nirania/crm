@@ -71,71 +71,17 @@ const GRNs: React.FC = () => {
 
 
 	return (
-		<div style={{ display: 'flex', width: '100%' }}>
+		<div style={{ width: '100%' }}>
+			<Button
+				variant="contained"
+				color="primary"
+				onClick={() => setOpenFormDialog(true)} // Add your handler function here
+				sx={{ marginTop: 2, mb: 2 }} // Optional: Add margin for spacing
+			>
+				Add New GRN
+			</Button>
 
-			<div style={{ width: '200px', marginRight: '16px' }}>
-				{/* {initialFilters.length > 0 && initialFilters.map((f, fi) => {
-					if ((f instanceof PropertyFilter || f instanceof ListFilter) && f.values.length > 0) {
-						return (
-							<Accordion sx={{ margin: 0, padding: 0 }} key={fi}>
-								<AccordionSummary
-									expandIcon={<ExpandMore />}
-									aria-controls="panel1-content"
-									id="panel1-header"
-								>
-									{f.name.toUpperCase()}
-								</AccordionSummary>
-								<AccordionDetails>
-									<FormGroup>
-										{f.values.map((v, vi) => {
-											return (
-												<FormControlLabel
-													key={vi}
-													control={
-														<Checkbox
-															onChange={(h) => {
-																console.log("h.target.checked ", h.target.checked)
-																handleCheckBoxChange(fi, vi, h.target.checked);
-															}}
-															defaultChecked={v.isChecked}
-														/>
-													}
-													label={v.name}
-												/>
-											);
-										})}
-										<Button
-											variant="contained"
-											color="primary"
-											onClick={() => handleApplyFilters()} // Add your handler function here
-											sx={{ marginTop: 2 }} // Optional: Add margin for spacing
-										>
-											Apply
-										</Button>
-									</FormGroup>
-								</AccordionDetails>
-							</Accordion>
-						);
-					} else if (f instanceof ListFilter && f.values.length > 0) {
-
-					}
-					return null; // Return null for unsupported filter types
-				})} */}
-				<Button
-					variant="contained"
-					color="primary"
-					onClick={() => setOpenFormDialog(true)} // Add your handler function here
-					sx={{ marginTop: 2 }} // Optional: Add margin for spacing
-				>
-					Add New GRN
-				</Button>
-				<></>
-			</div>
-
-			{/* Products Table Section */}
-			<div style={{}}>
-				<GRNTable filters={[]} />
-			</div>
+			<GRNTable filters={[]} />
 
 			<Dialog open={openFormDialog} onClose={() => { setOpenFormDialog(false) }} fullWidth>
 				<DialogTitle>Add New GRN</DialogTitle>
@@ -294,7 +240,7 @@ const GRNTable: React.FC<GRNTableProps> = ({ filters }) => {
 	}, [paginationModel.page, paginationModel.pageSize, filters]);
 
 	return (
-		<div style={{ height: '100%', width: 1600, overflow: 'auto' }}>
+		<div style={{ height: '100%', overflow: 'auto' }}>
 			<DataGrid
 				rows={rows}
 				disableMultipleRowSelection={true}
