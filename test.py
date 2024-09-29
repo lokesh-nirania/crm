@@ -8,7 +8,7 @@ BASE_URL = "http://localhost:8080/api/crm/v1"
 
 # Authorization header (replace with your token)
 HEADERS = {
-    "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGV4YW1wbGUuY29tIiwiZXhwIjoxNzI3NTU3NzY3LCJyb2xlIjoiYWRtaW4iLCJ1c2VyX2lkIjoxfQ.7hB7E-5PIn-RnLquzR-lqvOgl8_tlqdREfGPWJvuMEg",
+    "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGV4YW1wbGUuY29tIiwiZXhwIjoxNzI3ODE0Mzg5LCJyb2xlIjoiYWRtaW4iLCJ1c2VyX2lkIjoxfQ.r2EuqkOwydhRaCYQ4-4kmj3HmpqbRf06wHedevBpg4E",
     "Content-Type": "application/json"
 }
 
@@ -105,5 +105,5 @@ def main(num_products):
 
 # Run the script to create 15 items of each property and 10 products
 if __name__ == "__main__":
-    num_products_to_create = 36000  # Change this value to create more or fewer products
+    num_products_to_create = 1500  # Change this value to create more or fewer products
     main(num_products_to_create)

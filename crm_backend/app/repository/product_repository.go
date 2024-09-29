@@ -212,6 +212,22 @@ func (p *productRepository) AddProduct(c *gin.Context, product *model.Product) (
 		return nil, err
 	}
 
+	var sizeVariants []model.SizeVariant
+	if err := tx.Where("variant = ?", product.SizeVariant).Find(&sizeVariants).Error; err != nil {
+		return nil, err
+	}
+
+	for _, sizeVariant := range sizeVariants {
+		inventory := model.Inventory{
+			ProductID:     product.ID,
+			SizeVariantID: sizeVariant.ID,
+		}
+
+		if err := tx.Create(&inventory).Error; err != nil {
+			return nil, err
+		}
+	}
+
 	// Commit the transaction if everything is successful
 	if err := tx.Commit().Error; err != nil {
 		return nil, err

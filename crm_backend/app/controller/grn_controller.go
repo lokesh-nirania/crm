@@ -109,6 +109,10 @@ func (ctrl *GRNCtrl) AddGRN(c *gin.Context) {
 
 	savedGrn, err := ctrl.grnService.AddGRN(c, grn)
 	if err != nil {
+		if err == crmErrors.ERR_GRN_NO_PRODUCTS {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Alteast one size quantity must be non zero"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

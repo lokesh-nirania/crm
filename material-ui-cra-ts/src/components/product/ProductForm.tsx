@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { TextField, Switch, FormControl, InputLabel, MenuItem, Button, Grid2 as Grid, Paper, styled, Box, Card, OutlinedInput, InputAdornment, Checkbox, FormGroup, FormControlLabel, Dialog, DialogContent, DialogTitle, DialogActions, DialogContentText, CircularProgress } from '@mui/material';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
-import Product, { ProductFormDataRequest, ProductAttributeProperty } from '../model/product';
-import { getProductAttributes, postProductForm, postProductProperty } from '../api/product_service';
+import Product, { ProductFormDataRequest, ProductAttributeProperty } from '../../model/product';
+import { getProductAttributes, postProductForm, postProductProperty } from '../../api/product_service';
 import { enqueueSnackbar } from 'notistack';
-import ImageUploadPreview from './ImageUploadPreview';
+import ImageUploadPreview from '../ImageUploadPreview';
 // Define types for your dropdown options and product data
 
 

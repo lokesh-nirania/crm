@@ -139,12 +139,21 @@ function SideBarMenuItems() {
 		{ text: 'Cart', path: '/cart', icon: <Shop /> },
 	];
 
-	if (user !== null) {
+	if (user !== null && user.UserType === "admin") {
 		menuItems = [
 			{ text: 'Home', path: '/', icon: <Home /> },
 			{ text: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
 			{ text: 'Products', path: '/products', icon: <Inventory /> },
 			{ text: 'GRN', path: '/grns', icon: <Receipt /> },
+			{ text: 'Orders', path: '/orders', icon: <Shop /> },
+			{ text: 'Shop', path: '/shop', icon: <Shop2 /> },
+			{ text: 'Cart', path: '/cart', icon: <Shop /> },
+		];
+	}
+
+	if (user !== null && user.UserType !== "admin") {
+		menuItems = [
+			{ text: 'Home', path: '/', icon: <Home /> },
 			{ text: 'Orders', path: '/orders', icon: <Shop /> },
 			{ text: 'Shop', path: '/shop', icon: <Shop2 /> },
 			{ text: 'Cart', path: '/cart', icon: <Shop /> },

@@ -184,7 +184,8 @@ const GRNTable: React.FC<GRNTableProps> = ({ filters }) => {
 				po: string,
 				remarks: string,
 				vendor: string,
-				warehouse: string;
+				warehouse: string,
+				created_at: string,
 				expected_date: string,
 				confirmed_date: string,
 				created_by: string,
@@ -198,6 +199,7 @@ const GRNTable: React.FC<GRNTableProps> = ({ filters }) => {
 				remarks: confirmedGRN.grn.remarks,
 				vendor: confirmedGRN.grn.vendor.name,
 				warehouse: confirmedGRN.grn.warehouse.name,
+				created_at: confirmedGRN.grn.created_at,
 				expected_date: confirmedGRN.grn.expected_date,
 				confirmed_date: confirmedGRN.grn.confirmed_date,
 				created_by: confirmedGRN.grn.created_by.Username,
@@ -211,6 +213,8 @@ const GRNTable: React.FC<GRNTableProps> = ({ filters }) => {
 					row.id === grn_id ? updatedRow : row // Replace the row with the updated row data
 				)
 			);
+
+			enqueueSnackbar("GRN Confirmed Succcessfully", { variant: 'success' }); // Show error notification
 
 			console.log("need to confrom grin i ", grn_id, JSON.stringify(confirmedGRN))
 		} catch (error: any) {

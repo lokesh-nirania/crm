@@ -122,6 +122,9 @@ func (g *grnService) AddGRN(ctx *gin.Context, grn *dto.AddGRNRequest) (*dto.GRNR
 	grnProductsModels := []model.GRNProduct{}
 	for _, p := range grn.Products {
 		for _, sv := range p.SizeVariants {
+			if sv.Quantity == 0 {
+				continue
+			}
 			grnProductModel := model.GRNProduct{
 				GRNID:         0,
 				ProductID:     uint(p.ID),
@@ -131,6 +134,10 @@ func (g *grnService) AddGRN(ctx *gin.Context, grn *dto.AddGRNRequest) (*dto.GRNR
 
 			grnProductsModels = append(grnProductsModels, grnProductModel)
 		}
+	}
+
+	if len(grnProductsModels) == 0 {
+		return nil, crmErrors.ERR_GRN_NO_PRODUCTS
 	}
 
 	savedGrn, err := g.grnRepo.AddGRNWithProducts(ctx, grnModel, &grnProductsModels)
@@ -151,6 +158,7 @@ func (g *grnService) AddGRN(ctx *gin.Context, grn *dto.AddGRNRequest) (*dto.GRNR
 		Warehouse:     dto.GRNWarehouseResponse{},
 		Vendor:        dto.GRNVendorResponse{},
 		ExpectedDate:  savedGrn.ExpectedDate.Format("02/01/2006"),
+		CreatedDate:   savedGrn.CreatedAt.Format("02/01/2006"),
 		ConfirmedDate: confirmedDateStr,
 		CreatedBy:     savedGrn.CreatedBy,
 		ConfirmedBy:   savedGrn.ConfirmedBy,
@@ -186,6 +194,7 @@ func (g *grnService) ConfirmGRN(ctx *gin.Context, grnId int) (*dto.GRNResponse, 
 			Code: updatedGrn.Vendor.Code,
 		},
 		ExpectedDate:  updatedGrn.ExpectedDate.Format("02/01/2006"),
+		CreatedDate:   updatedGrn.CreatedAt.Format("02/01/2006"),
 		ConfirmedDate: updatedGrn.ConfirmedDate.Format("02/01/2006"),
 		CreatedBy:     updatedGrn.CreatedBy,
 		ConfirmedBy:   updatedGrn.ConfirmedBy,

@@ -7,9 +7,9 @@ import Products from './pages/Products';
 import Profile from './pages/Profile';
 
 import { AuthProvider } from './providers/AuthContext'; // Import the AuthProvider
-import { Shop } from '@mui/icons-material';
 import Home from './pages/Home';
 import GRNs from './pages/GRNs';
+import Shop from './pages/Shop';
 
 // Create other page components like GRN, Orders
 

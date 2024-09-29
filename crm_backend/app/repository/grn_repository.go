@@ -1,8 +1,9 @@
 package repository
 
 import (
-	"crm-backend/app/errors"
+	crmErrors "crm-backend/app/errors"
 	"crm-backend/app/model"
+	"errors"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -41,7 +42,15 @@ func (a *grnRepository) GetFilteredGRNs(
 	var grn []model.GRN
 	var totalItems int64
 
-	if err := a.db.Preload("Vendor").
+	query := a.db.Model(&model.GRN{})
+
+	query.Count(&totalItems)
+
+	query = query.Order(sortBy + " " + sortOrder)
+
+	offset := (page - 1) * pageSize
+	if err := query.Offset(offset).Limit(pageSize).
+		Preload("Vendor").
 		Preload("Warehouse").
 		Preload("CreatedBy").
 		Preload("ConfirmedBy").
@@ -49,7 +58,6 @@ func (a *grnRepository) GetFilteredGRNs(
 		return nil, 0, err
 	}
 
-	totalItems = int64(len(grn))
 	return &grn, totalItems, nil
 }
 
@@ -88,25 +96,73 @@ func (a *grnRepository) ConfirmGRN(ctx *gin.Context, grnID uint, userID uint) (*
 		Preload("Warehouse").
 		Preload("CreatedBy").
 		Preload("ConfirmedBy").
+		Preload("GRNProducts").
 		First(&grn, grnID).Error; err != nil {
-		return nil, errors.ERR_INVALID_GRN
+		return nil, crmErrors.ERR_INVALID_GRN
 	}
 
 	// Check if ConfirmedBy and ConfirmedDate are null
-	if grn.ConfirmedByID == nil && grn.ConfirmedDate == nil && grn.Status == string(model.Pending) {
-		// Update ConfirmedDate to today and ConfirmedByID to given userID
+	if grn.ConfirmedByID != nil || grn.ConfirmedDate != nil || grn.Status != string(model.Pending) {
+		return nil, crmErrors.ERR_GRN_ALREADY_CONFIRMED
+	}
+
+	// Start a transaction
+	err := a.db.Transaction(func(tx *gorm.DB) error {
+		// Step 1: Update GRN to confirmed status
 		now := time.Now()
 		grn.ConfirmedDate = &now
 		grn.ConfirmedByID = &userID
 		grn.Status = string(model.Confirmed)
 
-		// Save the updates to the database
-		if err := a.db.Save(&grn).Error; err != nil {
-			return nil, err
+		// Save the updates to the GRN
+		if err := tx.Save(&grn).Error; err != nil {
+			return err
 		}
-	} else {
-		// Return null or error if ConfirmedBy or ConfirmedDate is already set
-		return nil, errors.ERR_GRN_ALREADY_CONFIRMED
+
+		// Step 2: Loop through GRNProducts and update the inventory
+		for _, grnProduct := range grn.GRNProducts {
+			var inventory model.Inventory
+
+			// Check if an inventory record exists for this product and size variant
+			if err := tx.Where("product_id = ? AND size_variant_id = ?", grnProduct.ProductID, grnProduct.SizeVariantID).First(&inventory).Error; err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					// Inventory record does not exist, create a new one
+					inventory = model.Inventory{
+						ProductID:     grnProduct.ProductID,
+						SizeVariantID: grnProduct.SizeVariantID,
+						Quantity:      grnProduct.Quantity, // Set initial quantity
+					}
+					if err := tx.Create(&inventory).Error; err != nil {
+						return err
+					}
+				} else {
+					// An unexpected error occurred
+					return err
+				}
+			} else {
+				// Inventory record exists, increase the quantity
+				inventory.Quantity += grnProduct.Quantity
+				if err := tx.Save(&inventory).Error; err != nil {
+					return err
+				}
+			}
+		}
+
+		return nil
+	})
+
+	// If the transaction fails, return the error
+	if err != nil {
+		return nil, err
+	}
+
+	if err := a.db.Preload("Vendor").
+		Preload("Warehouse").
+		Preload("CreatedBy").
+		Preload("ConfirmedBy").
+		Preload("GRNProducts").
+		First(&grn, grnID).Error; err != nil {
+		return nil, crmErrors.ERR_INVALID_GRN
 	}
 
 	// Return the updated GRN model

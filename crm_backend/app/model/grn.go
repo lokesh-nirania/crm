@@ -38,7 +38,7 @@ type GRN struct {
 	CreatedByID uint `gorm:"not null"` // User ID who created the GRN (foreign key to User)
 	CreatedBy   User `gorm:"foreignKey:CreatedByID" json:"created_by"`
 
-	ConfirmedByID *uint `gorm:"not null"` // User ID who confirmed the GRN (can be null)
+	ConfirmedByID *uint // User ID who confirmed the GRN (can be null)
 	ConfirmedBy   *User `gorm:"foreignKey:ConfirmedByID" json:"confirmed_by"`
 
 	GRNProducts []GRNProduct `gorm:"foreignKey:GRNID"` // Explicit relationship to GRNProduct table
@@ -46,13 +46,13 @@ type GRN struct {
 
 type GRNProduct struct {
 	gorm.Model
-	GRNID uint `gorm:"not null"` // Foreign key to the GRN
+	GRNID uint `gorm:"not null;uniqueIndex:idx_grn_product_size"` // Foreign key to the GRN
 	GRN   GRN  `gorm:"foreignKey:GRNID"`
 
-	ProductID uint    `gorm:"not null"` // Foreign key to the Product
+	ProductID uint    `gorm:"not null;uniqueIndex:idx_grn_product_size"` // Foreign key to the Product
 	Product   Product `gorm:"foreignKey:ProductID"`
 
-	SizeVariantID uint        `gorm:"not null"`
+	SizeVariantID uint        `gorm:"not null;uniqueIndex:idx_grn_product_size"`
 	SizeVariant   SizeVariant `gorm:"foreignKey:SizeVariantID" json:"-"`
 
 	Quantity int `gorm:"not null"` // Quantity of this specific product in this GRN

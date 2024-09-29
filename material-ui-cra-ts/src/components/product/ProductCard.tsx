@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, Typography, Table, TableBody, TableCell, TableRow, CardMedia } from '@mui/material';
-import Product from '../model/product';
+import Product from '../../model/product';
 
 
 const ProductInfoCard: React.FC<{ product: Product | null }> = ({ product }) => {

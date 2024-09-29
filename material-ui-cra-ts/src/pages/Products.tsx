@@ -2,12 +2,11 @@ import React, { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { getAllFilteredProducts, getAllFilters } from '../api/product_service';
 import { enqueueSnackbar } from 'notistack';
 import Product, { PropertyFilter, ProductFilter, ProductAttributeProperty, ListFilter, ProductAttributeList } from '../model/product';
-import { Accordion, AccordionActions, AccordionDetails, AccordionSummary, Button, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, FormGroup, IconButton } from '@mui/material';
-import { Edit, ExpandMore, Visibility } from '@mui/icons-material';
+import { Accordion, AccordionDetails, AccordionSummary, Button, Checkbox, Dialog, DialogContent, DialogTitle, FormControlLabel, FormGroup, IconButton } from '@mui/material';
+import { ExpandMore, Visibility } from '@mui/icons-material';
 import { DataGrid, GridPaginationModel, GridRowSelectionModel, GridRowsProp } from '@mui/x-data-grid';
-import { useNavigate } from 'react-router-dom';
-import ProductForm from '../components/ProductForm';
-import ProductInfoCard from '../components/ProductCard';
+import ProductForm from '../components/product/ProductForm';
+import ProductInfoCard from '../components/product/ProductCard';
 
 const Products: React.FC = () => {
 

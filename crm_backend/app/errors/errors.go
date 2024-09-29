@@ -19,4 +19,5 @@ var ERR_INAVLID_PRODUCT_PROPERTY *CustomError = &CustomError{Err: "ERR_INAVLID_P
 var ERR_INAVLID_GRN_WAREHOUSE *CustomError = &CustomError{Err: "ERR_INAVLID_GRN_WAREHOUSE"}
 var ERR_INAVLID_GRN_VENDOR *CustomError = &CustomError{Err: "ERR_INAVLID_GRN_VENDOR"}
 var ERR_INVALID_GRN *CustomError = &CustomError{Err: "ERR_INVALID_GRN"}
+var ERR_GRN_NO_PRODUCTS *CustomError = &CustomError{Err: "ERR_GRN_NO_PRODUCTS"}
 var ERR_GRN_ALREADY_CONFIRMED *CustomError = &CustomError{Err: "ERR_GRN_ALREADY_CONFIRMED"}
