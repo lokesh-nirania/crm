@@ -5,6 +5,7 @@ import (
 	crmErrors "crm-backend/app/errors"
 	"crm-backend/app/service"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -40,4 +41,21 @@ func (ctrl *OrderCtrl) PlaceOrder(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": "ok", "grn": savedGrn})
+}
+
+func (ctrl *OrderCtrl) GetOrders(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
+
+	// Sorting params
+	sortBy := c.DefaultQuery("sortBy", "created_at") // Default sort by name
+	sortOrder := c.DefaultQuery("sortOrder", "desc") // Default ascending order
+
+	orders, err := ctrl.orderService.GetFilteredOrders(c, page, pageSize, sortBy, sortOrder)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "ok", "orders": orders})
 }

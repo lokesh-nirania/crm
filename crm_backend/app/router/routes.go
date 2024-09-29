@@ -107,7 +107,7 @@ func InitializeRoutes(router *gin.Engine) {
 	orders := router.Group("/api/crm/v1/orders")
 	orders.Use(middleware.JWTAuthMiddleware(jwtSecret)) // Apply the JWT middleware
 	{
-		orders.GET("", nil)
+		orders.GET("", orderController.GetOrders)
 		orders.POST("/place", orderController.PlaceOrder)
 	}
 }

@@ -87,13 +87,7 @@ const CartPage: React.FC = () => {
     }, [cartItems])
 
 
-    return <Box sx={{ m: 2 }}>{cartItems.length > 0 && products.map((p, pi) => {
-        return <Box>
-            <ProductCartSummaryCard product={p} cart={cartItems[pi]} />
-
-        </Box>
-    })}
-
+    return <Box sx={{ m: 2 }}>
         <Box sx={{ mt: 2 }}>
             Total Price: <Typography variant="h6" component="span" color="primary">
                 ₹{totalPrice}
@@ -105,6 +99,14 @@ const CartPage: React.FC = () => {
         <Button sx={{ mt: 2, ml: 2 }} variant="contained" color="success" onClick={placeOrder}>
             Place Order
         </Button>
+        {cartItems.length > 0 && products.map((p, pi) => {
+            return <Box>
+                <ProductCartSummaryCard product={p} cart={cartItems[pi]} />
+
+            </Box>
+        })}
+
+
     </Box>;
 };
 

@@ -9,6 +9,15 @@ import (
 
 type OrderRepo interface {
 	PlaceOrder(userId uint, orderReq *dto.OrderRequest) (*model.Order, error)
+	GetAllOrdersFiltered(
+		page, pageSize int,
+		sortBy, sortOrder string,
+	) (*[]model.Order, int64, error)
+	GetOrdersForUserFiltered(
+		userId uint,
+		page, pageSize int,
+		sortBy, sortOrder string,
+	) (*[]model.Order, int64, error)
 }
 
 type orderRepository struct {
@@ -68,4 +77,56 @@ func (p *orderRepository) PlaceOrder(userId uint, orderReq *dto.OrderRequest) (*
 	}
 
 	return nil, nil
+}
+
+func (p *orderRepository) GetAllOrdersFiltered(
+	page, pageSize int,
+	sortBy, sortOrder string,
+) (*[]model.Order, int64, error) {
+	var orders []model.Order
+	var totalItems int64
+
+	query := p.db.Model(&model.GRN{})
+
+	query.Count(&totalItems)
+
+	query = query.Order(sortBy + " " + sortOrder)
+	offset := (page - 1) * pageSize
+
+	if err := query.Offset(offset).Limit(pageSize).
+		Preload("CreatedFor").
+		Preload("CreatedBy").
+		Preload("OrderProducts").
+		Find(&orders).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return &orders, totalItems, nil
+}
+
+func (p *orderRepository) GetOrdersForUserFiltered(
+	userId uint,
+	page, pageSize int,
+	sortBy, sortOrder string,
+) (*[]model.Order, int64, error) {
+	var orders []model.Order
+	var totalItems int64
+
+	query := p.db.Model(&model.GRN{})
+	query = query.Where("created_for_id = ?", userId)
+
+	query.Count(&totalItems)
+
+	query = query.Order(sortBy + " " + sortOrder)
+	offset := (page - 1) * pageSize
+
+	if err := query.Offset(offset).Limit(pageSize).
+		Preload("CreatedFor").
+		Preload("CreatedBy").
+		Preload("OrderProducts").
+		Find(&orders).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return &orders, totalItems, nil
 }
