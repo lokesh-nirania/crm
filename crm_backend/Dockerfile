@@ -1,11 +1,18 @@
-FROM golang:1.22
+FROM golang:1.23-alpine as builder
 
-WORKDIR /app
+WORKDIR /mydir
 
+COPY go.mod go.sum ./
+RUN go mod download
 COPY . .
 
-RUN go mod download
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o crm_backend
 
-RUN go build -o main .
+FROM alpine:3.17
 
-CMD ["/app/main"]
+RUN apk --no-cache add curl
+
+COPY --from=builder /mydir/crm_backend ./crm_backend
+COPY --from=builder /mydir/app/config/config.json ./app/config/config.json
+
+ENTRYPOINT ["./crm_backend"]
